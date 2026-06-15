@@ -4,15 +4,27 @@
   "description": "让两个 AI 自动展开正反辩论的桌面应用",
   "license": "MIT",
   "private": true,
-  "main": "spike/debate-demo.js",
+  "main": "electron/main.cjs",
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
+    "dev:vite": "vite",
+    "dev": "concurrently -k \"vite\" \"wait-on tcp:5173 && electron .\"",
+    "build": "vite build",
+    "start": "electron .",
     "demo": "electron spike/debate-demo.js",
     "probe": "electron spike/probe-main.js"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.0",
     "electron": "^33.4.11",
-    "vitest": "^4.1.9"
+    "vite": "^6.0.7",
+    "vitest": "^4.1.9",
+    "wait-on": "^8.0.1"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   }
 }
