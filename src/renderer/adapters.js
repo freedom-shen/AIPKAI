@@ -21,6 +21,26 @@ export const kimi = {
     )});setTimeout(()=>el.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',code:'Enter',keyCode:13,which:13,bubbles:true})),150);return true;})()`,
 };
 
-// 注册表：第一期仅 Kimi（通义待实测后补）
-export const ADAPTERS = { kimi };
-export const ADAPTER_LIST = [kimi];
+export const deepseek = {
+  id: "deepseek",
+  label: "DeepSeek",
+  url: "https://chat.deepseek.com/",
+  badge: "DS",
+  // 实测：登录后才有聊天 textarea
+  LOGGEDIN: `!!document.querySelector('textarea')`,
+  // 最终答案容器（深度思考的推理在 .ds-think-content / 普通 .ds-markdown，不在 main-content，故天然排除思考链）
+  COUNT: `document.querySelectorAll('.ds-assistant-message-main-content').length`,
+  ANSWER: `(()=>{const ms=document.querySelectorAll('.ds-assistant-message-main-content');const l=ms[ms.length-1];return l?((l.innerText)||'').trim():'';})()`,
+  // DeepSeek 停止按钮为图标按钮、类名不稳定；置 false 退化为"答案文本稳定即完成"（答案出现前 main-content 为空，不会误判）
+  STOP: `false`,
+  NEWCHAT: `(()=>{const e=[...document.querySelectorAll('div,button,span,a')].find(x=>{const t=(x.textContent||'').trim();return t==='开启新对话'||t==='新对话'||t==='新建对话'});if(e){e.click();return true}return false})()`,
+  inject: (text) =>
+    `(()=>{const el=document.querySelector('textarea');if(!el)return false;el.focus();const set=Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype,'value').set;set.call(el,${JSON.stringify(
+      text
+    )});el.dispatchEvent(new Event('input',{bubbles:true}));setTimeout(()=>el.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',code:'Enter',keyCode:13,which:13,bubbles:true})),200);return true;})()`,
+  STRUCT: `(()=>{const ms=document.querySelectorAll('.ds-assistant-message-main-content');return JSON.stringify({answers:ms.length,think:!!document.querySelector('.ds-think-content'),last:(ms[ms.length-1]&&ms[ms.length-1].innerText||'').trim().slice(0,40)});})()`,
+};
+
+// 注册表（通义待实测后补）
+export const ADAPTERS = { kimi, deepseek };
+export const ADAPTER_LIST = [kimi, deepseek];
