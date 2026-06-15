@@ -25,19 +25,35 @@ export default function App() {
   const proRef = useRef(null);
   const conRef = useRef(null);
   const abortRef = useRef(null);
+  const reloadAt = useRef({ pro: 0, con: 0 });
 
   // 轮询登录态（读 webview HTML 结构判断）
   useEffect(() => {
-    const check = async (ref) => {
+    const check = async (ref, who) => {
       const wv = ref.current;
       if (!wv || typeof wv.executeJavaScript !== "function") return "chk";
-      try { return (await wv.executeJavaScript(PRO_ADAPTER.LOGGEDIN)) ? "ok" : "no"; }
-      catch { return "chk"; }
+      try {
+        const info = await wv.executeJavaScript(
+          `JSON.stringify({url:location.href,input:!!document.querySelector('.chat-input-editor'),loginBtn:[...document.querySelectorAll('button,[role=button],a,span,div')].some(e=>{const t=(e.innerText||'').trim();return t==='登录'||t==='登 录'||t==='立即登录'}),avatar:!!document.querySelector('img[class*=avatar],[class*=avatar],[class*=Avatar],[class*=user-info]'),title:document.title})`
+        );
+        console.log("[login]", who, info);
+        const d = JSON.parse(info);
+        // 暂定信号：有"登录"按钮 => 未登录；否则视为已登录（待你登录后用日志校准）
+        return d.loginBtn ? "no" : "ok";
+      } catch (e) { console.log("[login]", who, "ERR", e.message); return "chk"; }
+    };
+    const maybeReload = (ref, who) => {
+      const now = Date.now();
+      if (now - reloadAt.current[who] > 8000) { reloadAt.current[who] = now; try { ref.current?.reload(); } catch {} }
     };
     let alive = true;
     const tick = async () => {
-      const [p, c] = await Promise.all([check(proRef), check(conRef)]);
-      if (alive) setLogin({ pro: p, con: c });
+      const [p, c] = await Promise.all([check(proRef, "pro"), check(conRef, "con")]);
+      if (!alive) return;
+      setLogin({ pro: p, con: c });
+      // 同账号共享 session：一侧已登录、另一侧仍未登录 → 自动刷新滞后侧以同步登录态
+      if (p === "ok" && c === "no") maybeReload(conRef, "con");
+      else if (c === "ok" && p === "no") maybeReload(proRef, "pro");
     };
     const id = setInterval(tick, 2500);
     tick();
@@ -132,11 +148,11 @@ export default function App() {
         </div>
         {/* 正方 webview（常驻，保持存活） */}
         <div className={"webview-host " + (tab === "pro" ? "" : "hidden")}>
-          <webview ref={proRef} className="wv" src={PRO_ADAPTER.url} partition="persist:kimi" useragent={UA} webpreferences="backgroundThrottling=false" />
+          <webview ref={proRef} className="wv" src={PRO_ADAPTER.url} partition="persist:kimi" useragent={UA} allowpopups="true" webpreferences="backgroundThrottling=false" />
         </div>
         {/* 反方 webview */}
         <div className={"webview-host " + (tab === "con" ? "" : "hidden")}>
-          <webview ref={conRef} className="wv" src={CON_ADAPTER.url} partition="persist:kimi" useragent={UA} webpreferences="backgroundThrottling=false" />
+          <webview ref={conRef} className="wv" src={CON_ADAPTER.url} partition="persist:kimi" useragent={UA} allowpopups="true" webpreferences="backgroundThrottling=false" />
         </div>
       </div>
     </div>
@@ -171,17 +187,13 @@ function Setup({ topic, setTopic, rounds, setRounds, login, ready, onStart }) {
           <div className="lbl">回合数</div>
           <div className="stepper">
             <button onClick={() => setRounds((r) => Math.max(2, r - 1))}>−</button>
-            <div className="n">{rounds}<small> 回合</small></div>
+            <div className="n">{rounds}</div>
             <button onClick={() => setRounds((r) => Math.min(8, r + 1))}>+</button>
           </div>
+          <div className="unit">回合</div>
         </div>
       </div>
 
-      <div className="banner">
-        <span>ℹ️</span>
-        <span>登录在「正方 / 反方」标签页内完成——两个标签的状态点都变绿，即可开始辩论。</span>
-        <span className="legend"><span><i className="dot no" /> 未登录</span><span><i className="dot chk" /> 检测中</span><span><i className="dot ok" /> 已登录</span></span>
-      </div>
     </div>
   );
 }

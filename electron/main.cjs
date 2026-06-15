@@ -18,6 +18,15 @@ function createWindow() {
     },
   });
 
+  // 调试：把渲染层 console 落盘，便于无 GUI 排查
+  const fs = require("fs");
+  const logPath = path.join(__dirname, "..", "app-debug.log");
+  try { fs.writeFileSync(logPath, `=== app debug ${new Date().toISOString()} ===\n`); } catch (e) {}
+  win.webContents.on("console-message", (e, level, message) => {
+    let msg = message; if (e && typeof e === "object" && e.message !== undefined) msg = e.message;
+    if (/\[login\]|\[debate\]|error/i.test(String(msg))) { try { fs.appendFileSync(logPath, msg + "\n"); } catch (_) {} }
+  });
+
   if (isDev) {
     win.loadURL("http://localhost:5173");
     win.webContents.openDevTools({ mode: "detach" });
