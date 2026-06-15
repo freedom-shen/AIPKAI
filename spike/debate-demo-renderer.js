@@ -13,6 +13,7 @@ const COUNT = `document.querySelectorAll('.chat-content-item-assistant').length`
 const STOP = `!!document.querySelector('.send-button-container.stop')`;
 const LOGGEDIN = `!!document.querySelector('.chat-input-editor')`;
 const NEWCHAT = `(()=>{const e=[...document.querySelectorAll('div,button,a,span')].find(x=>(x.textContent||'').trim()==='新建会话');if(e){e.click();return true}return false})()`;
+const LASTHTML = `(()=>{const it=document.querySelectorAll('.chat-content-item-assistant');const l=it[it.length-1];return l?(l.outerHTML||'').slice(0,1400):'(no assistant item)';})()`;
 const injectCode = (text) =>
   `(()=>{const el=document.querySelector('.chat-input-editor');if(!el)return false;el.focus();document.execCommand('insertText',false,${JSON.stringify(text)});setTimeout(()=>el.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',code:'Enter',keyCode:13,which:13,bubbles:true})),150);return true;})()`;
 
@@ -35,6 +36,11 @@ function makeParticipant(wv, label) {
       for (let i = 0; i < 16; i++) { await sleep(500); if (await exec(STOP)) { started = true; break; } }
       // 轮询直到停止生成(无 .send-button-container.stop)且文本稳定
       let last = "", stable = 0;
+      const finish = async (tag) => {
+        if (last.length < 100) { const h = await exec(LASTHTML).catch(() => "?"); D(label, "ANOMALY", tag, "len", last.length, "html:", h); }
+        D(label, "done", tag, "len", last.length);
+        return last;
+      };
       for (let i = 0; i < 150; i++) {
         await sleep(800);
         const gen = await exec(STOP);
@@ -42,12 +48,11 @@ function makeParticipant(wv, label) {
         if (a && a !== last) { last = a; stable = 0; if (onChunk) onChunk(a); }
         else if (a === last && a) { stable++; }
         // 见过生成开始：无停止按钮 + 稳定2拍即完成
-        if (started && !gen && last.length > 0 && stable >= 2) { D(label, "done len", last.length); return last; }
+        if (started && !gen && last.length > 0 && stable >= 2) return await finish("normal");
         // 没见过生成开始(回答极快/极短)：用更强的稳定阈值兜底
-        if (!started && !gen && last.length > 0 && stable >= 5) { D(label, "done(fast) len", last.length); return last; }
+        if (!started && !gen && last.length > 0 && stable >= 5) return await finish("fast");
       }
-      D(label, "timeout len", last.length);
-      return last;
+      return await finish("timeout");
     },
   };
 }
