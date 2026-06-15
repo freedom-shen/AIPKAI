@@ -24,6 +24,8 @@
     "postinstall": "electron-builder install-app-deps",
     "postuninstall": "electron-builder install-app-deps",
     "start": "electron .",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "release-all": "vue-cli-service electron:build -wml --x64 --arm64",
     "release-macos": "vue-cli-service electron:build --mac --x64 --arm64",
     "release-linux": "vue-cli-service electron:build --linux --x64 --arm64",
@@ -89,7 +91,8 @@
     "md5": "^2.3.0",
     "prettier": "^3.5.3",
     "prettier-plugin-vue": "^1.1.6",
-    "sse.js": "^2.6.0"
+    "sse.js": "^2.6.0",
+    "vitest": "^4.1.9"
   },
   "eslintConfig": {
     "root": true,
