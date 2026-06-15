@@ -4,6 +4,8 @@
 
 **输入一个话题，让两个 AI 自动展开正反辩论的桌面应用。**
 
+简体中文 | [English](README_EN.md)
+
 </div>
 
 ---
@@ -34,7 +36,7 @@
 - 🧩 自动分配正/反立场，固定回合后结束
 - 🌐 跟随话题语言自动生成中/英文提示词
 - 🖥️ 纯桌面端，登录态保存在本地
-- 🧱 基于成熟开源项目 [ChatALL](https://github.com/ai-shifu/ChatALL) 二次开发
+- 🧱 基于 Electron 自研实现（调研阶段参考过 [ChatALL](https://github.com/ai-shifu/ChatALL) 的思路）
 
 ## 项目状态
 
@@ -42,7 +44,7 @@
 
 ## 技术栈
 
-Electron · Vue 3 · JavaScript(ESM) · Vitest。文档见 `docs/superpowers/`（设计 spec 与实现计划）。
+Electron · JavaScript (ESM) · Vitest。文档见 `docs/superpowers/`（设计 spec 与实现计划）。
 
 ## 本地开发（macOS）
 
@@ -57,14 +59,14 @@ npm install
 # 运行单元测试（辩论引擎）
 npm test
 
-# 启动应用（开发模式）
-npm run electron:serve
+# 体验当前原型（两个 AI 辩论 demo）
+npm run demo
 ```
 
-## 致谢
+## 参考
 
-本项目基于 [**ChatALL**](https://github.com/ai-shifu/ChatALL)（作者 Sun Zhigang，Apache-2.0）二次开发，复用其 Electron/Vue 应用框架与多 AI 网页接入能力，特此致谢。
+本项目在调研阶段参考过开源项目 [ChatALL](https://github.com/ai-shifu/ChatALL) 的思路（用于确认"桌面端驱动 AI 网页"这一方向可行）。**本项目为独立实现，未使用其代码。**
 
 ## 许可证
 
-本项目遵循 **Apache License 2.0**（与上游 ChatALL 一致），详见 [`LICENSE`](LICENSE)。
+本项目以 **MIT** 许可发布，详见 [`LICENSE`](LICENSE)。
