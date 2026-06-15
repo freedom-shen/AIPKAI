@@ -39,6 +39,15 @@
 - **高峰容量错误**：Kimi 高峰返回"Kimi 有点累了…稍后再问"会混进对话流。**必须按 DOM 结构识别、严禁文字匹配**；属瞬时错误 → 重试（区别于登出/验证码 → 暂停）。
 - demo 资产：`spike/debate-demo.js` / `.html` / `-renderer.js`；日志 `spike/debate-demo.log`；`touch spike/debate-go.txt` 可无人值守触发。
 
+## 当前形态
+
+**独立 Electron 应用 + 原生 HTML/JS 前端，整库 MIT，无第三方 fork。** 仓库结构：
+`src/debate/`（辩论引擎，带单测）· `spike/`（可运行的 Electron 原型，应用外壳的雏形）· `mockup/`（UI 原型）· `docs/`（设计/计划/笔记）· `tests/`。
+
 ## 下一步
 
-- A 已完成。待办：① 固化为正式 Kimi 适配器 + `webviewParticipant`（Task 8/9）；② 通义千问同法验证（需登录）；③ 两页 Vue UI（Task 10–13）；④ 打包（Task 14–16）。
+- A 已完成（去 fork、纯 MIT）。待办：
+  ① 把 `spike/` 演进为正式 `app/`（主进程 + 两页前端），接入 Kimi 适配器与辩论引擎；
+  ② 通义千问同法验证（需登录）；
+  ③ 照 `mockup/` 做正式两页 UI（原生前端）；
+  ④ electron-builder 打包 + 域名下载页。
