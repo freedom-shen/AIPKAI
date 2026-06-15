@@ -526,7 +526,32 @@ git commit -m "feat(debate): add relay-loop orchestrator with retry/abort/abnorm
 
 ---
 
-## Phase 2 — AI 适配器
+## ⚠️ 架构更新（Task 1 摸底后确认，2026-06-15）
+
+Task 1 探查发现：① ChatALL 的"网页版 bot"是用**登录凭证调网站内部 HTTP/WS 接口**（非 DOM 抓取）；② **没有 DeepSeek bot**。用户明确：**只要纯网页、不用任何 API**（连 ChatALL 走内部接口的 bot 也不用）。因此：
+
+- **取数方式 = 纯 DOM 驱动**：自己加 Electron `<webview>` 嵌入真实网页，注入/读 DOM/DOM 信号判完成（即本计划 Phase 2/3 原本就写的 DOM 适配器路线）。
+- **不复用 ChatALL 的 bot**；ChatALL 仅作 Electron/Vue 外壳 + 会话/登录基础设施。需在主窗口开启 `webviewTag` 并自建两个 `<webview>`（ChatALL 现仅用 BrowserWindow 做登录，无聊天 webview）。
+- **默认辩手改为 Kimi × 通义千问**（`chat.deepseek.com` 换成 `www.kimi.com` 与 通义 `tongyi.aliyun.com`/`www.tongyi.com`）。下文 Phase 2–4 中所有 "DeepSeek" 一律替换为 "Kimi / 通义" 两个适配器。
+
+### Task 7.5（SPIKE，最高优先级，先做）: 验证一个站点可被 DOM 驱动
+
+> 这是整个项目的可行性命门。在投入全部脚手架前，先用最小代价验证：Electron webview 里能否对真实登录后的 Kimi 完成 登录检测→注入→读回答→完成判定。**需要人参与**（GUI + 手动登录 Kimi）。
+
+**Files:** Create: `spike/probe-main.js`（独立最小 Electron 主进程，不依赖 ChatALL 构建）
+
+- [ ] **Step 1: 写最小 Electron 探针**：开一个 `BrowserWindow` 加载 `https://www.kimi.com`，`webPreferences:{}` 默认即可，打开 DevTools。`dom-ready` 后注入一个全局 helper `window.__probe = { isLoggedIn, inject, latestAnswer, isComplete }`，每个先用候选选择器实现，便于在控制台手测。
+- [ ] **Step 2: 人工跑探针**（交给用户）：
+```
+N="$HOME/.nvm/versions/node/v20.19.0/bin"; export PATH="$N:$PATH"; unfunction node npm npx 2>/dev/null
+npx electron spike/probe-main.js
+```
+在弹出的 Kimi 窗口里**登录自己的账号**；然后在 DevTools 控制台依次执行：`__probe.isLoggedIn()`、`__probe.inject("用一句话介绍你自己")`、（等几秒）`__probe.latestAnswer()`、`__probe.isComplete()`。
+- [ ] **Step 3: 记录实测选择器与完成信号**到 `docs/CHATALL_NOTES.md`（新增"站点适配实测"小节）：Kimi 的输入框/发送/回答容器/停止按钮/登录标志选择器；若某项失败，记录页面真实结构以便修正。对通义重复一遍（Step 1 换 url）。
+- [ ] **Step 4: 判定**：若四步都能跑通 → 可行，按实测选择器进入 Task 8。若不可行（如站点强校验/反自动化）→ 报告 BLOCKED，回到设计层面与用户重新选站点或方案。
+- [ ] **Step 5: Commit**（探针脚本 + 实测笔记）。
+
+## Phase 2 — AI 适配器（按 Task 7.5 实测选择器实现 Kimi 与 通义 两个适配器）
 
 ### Task 7: 适配器契约 `contract.js`
 
