@@ -121,6 +121,7 @@ export default function App() {
   }
 
   function newDebate() {
+    if (phase === "running") return; // 进行中不允许新建
     abortRef.current?.abort();
     setRecord([]);
     setPartial(null);
@@ -161,7 +162,7 @@ export default function App() {
         {/* 对话标签：左历史 + 右主区 */}
         <div className={"chat-layout " + (tab === "chat" ? "" : "hidden")}>
           <aside className="sidebar">
-            <button className="side-new" onClick={newDebate}>＋ 新建辩论</button>
+            <button className="side-new" onClick={newDebate} disabled={phase === "running"} title={phase === "running" ? "辩论进行中，请先停止" : ""}>＋ 新建辩论</button>
             <div className="hist">
               {history.length === 0 && <div className="hist-empty">还没有历史辩论</div>}
               {history.map((h) => (
@@ -201,7 +202,7 @@ function Setup({ topic, setTopic, rounds, setRounds, login, ready, onStart }) {
     <div className="setup">
       <div className="eyebrow">新建一场辩论</div>
       <div className="topic-row">
-        <input className="topic-input" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="输入一个辩论话题…" />
+        <input className="topic-input" value={topic} onChange={(e) => setTopic(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && ready) onStart(); }} placeholder="输入一个辩论话题，回车开始…" />
         <button className={"start-btn" + (ready ? "" : " off")} onClick={onStart} disabled={!ready}>▶ 开始辩论</button>
       </div>
       <div className="subhint">{ready ? "两位 AI 均已就绪，点击开始自动辩论。" : "请在「正方 / 反方」标签页内完成网页登录（同一 Kimi 账号登录一次即可）。"}</div>

@@ -58,6 +58,7 @@ body {
 .chat-layout { display: flex; height: 100%; }
 .sidebar { width: 248px; flex: none; border-right: 1px solid var(--line); background: rgba(255,255,255,.55); display: flex; flex-direction: column; padding: 14px 12px; gap: 12px; overflow-y: auto; }
 .side-new { border: none; border-radius: 12px; padding: 11px; font-size: 14px; font-weight: 600; color: #fff; cursor: pointer; background: linear-gradient(135deg, var(--pro), var(--con)); box-shadow: 0 8px 18px -10px rgba(92,76,255,.5); }
+.side-new:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
 .hist { display: flex; flex-direction: column; gap: 4px; }
 .hist-empty { color: var(--muted); font-size: 12px; padding: 16px 8px; text-align: center; }
 .hist-item { padding: 10px 12px; border-radius: 10px; cursor: pointer; border: 1px solid transparent; }

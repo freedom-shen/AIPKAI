@@ -32,16 +32,20 @@ export function makeParticipant(webview, adapter) {
       }
       // 轮询直到停止生成且文本稳定
       let last = "", stable = 0;
+      const finish = async (tag) => {
+        if (adapter.STRUCT) { try { console.log("[debate] struct", tag, await exec(adapter.STRUCT)); } catch {} }
+        return last;
+      };
       for (let i = 0; i < 150; i++) {
         await sleep(800);
         const gen = await exec(adapter.STOP);
         const a = await exec(adapter.ANSWER);
         if (a && a !== last) { last = a; stable = 0; if (onChunk) onChunk(a); }
         else if (a === last && a) { stable++; }
-        if (started && !gen && last.length > 0 && stable >= 2) return last;
-        if (!started && !gen && last.length > 0 && stable >= 5) return last;
+        if (started && !gen && last.length > 0 && stable >= 2) return await finish("normal");
+        if (!started && !gen && last.length > 0 && stable >= 5) return await finish("fast");
       }
-      return last;
+      return await finish("timeout");
     },
   };
 }
