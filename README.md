@@ -1,199 +1,70 @@
 <div align="center">
-  <img src="src/assets/logo-cover.png" width=256></img>
-  <p><strong>Chat with ALL AI Bots Concurrently, Discover the Best</strong></p>
 
-[Deutsch](README_DE-DE.md) | English | [Español](README_ES-ES.md) | [Français](README_FR-FR.md) | [Italian](README_IT-IT.md) | [日本語](README_JA-JP.md) | [한국어](README_KO-KR.md) | [Русский](README_RU-RU.md) | [Tiếng Việt](README_VI-VN.md) | [简体中文](README_ZH-CN.md)
+# ⚔️ AI 辩论台 · AI Debate Arena
 
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/ai-shifu/ChatALL)
+**输入一个话题，让两个 AI 自动展开正反辩论的桌面应用。**
 
 </div>
 
-## Screenshots
+---
 
-![Screenshot](screenshots/screenshot-1.png?raw=true)
+## ⚠️ 免责声明（请先阅读）
 
-## Features
+- 本项目为**非官方、个人学习与研究用途**的开源工具，**与 Kimi、通义千问及任何 AI 服务提供方均无关、未获其授权或背书**。
+- 本工具通过在桌面应用内**驱动各 AI 的网页版**工作：用户在应用内**登录自己的账号**，应用自动将话题/对方观点填入网页、读取回答并组织成一场辩论。
+- 使用本工具即表示你**自行承担**相应风险，并**自行负责遵守你所使用的各 AI 服务的用户协议 / 服务条款**。各服务条款可能限制自动化访问；是否使用、如何使用由你自行判断。
+- 作者不对因使用本工具产生的任何后果（包括但不限于账号受限、内容合规等）负责。
+- 请勿将本工具用于商业目的、批量滥用或任何违反相关服务条款与法律法规的行为。
 
-Large Language Models (LLMs) based AI bots are amazing. However, their behavior can be random and different bots excel at different tasks. If you want the best experience, don't try them one by one. ChatALL (Chinese name: 齐叨) can send prompt to several AI bots concurrently, help you to discover the best results. All you need to do is [download, install](https://github.com/ai-shifu/ChatALL/releases) and ask.
+---
 
-### Is this you?
+## 这是什么
 
-Typical users of ChatALL are:
+一个 Electron 桌面应用：
 
-- 🤠**Gurus of LLMs**, who want to find the best answers or creations from LLMs.
-- 🤓**Researchers of LLMs**, who want to intuitively compare the strengths and weaknesses of various LLMs in different fields.
-- 😎**Developers of LLM applications**, who want to quickly debug prompts and find the best-performing foundation models.
+1. 你输入一个**话题**，选择两个 AI 分别作为**正方 / 反方**。
+2. 应用自动给双方分配立场（支持 / 反对），让它们**一来一回辩论若干回合**。
+3. 左侧汇总成一场干净的辩论记录，右侧是真实的 AI 网页（辩论引擎在其中读写）。
 
-### Supported bots
+> 设计理念：把"两个 AI 连续对话"做成开箱即用的桌面工具。提示词由应用按你的语言环境自动生成，你只需输入话题。
 
-| AI Bots                                                                        | Web Access  | API         | Notes                                       |
-| ------------------------------------------------------------------------------ | ----------- | ----------- | ------------------------------------------- |
-| [360 AI Brain](https://ai.360.cn/)                                             | Yes         | No API      |                                             |
-| [Baidu ERNIE](https://yiyan.baidu.com/)                                        | No          | Yes         |                                             |
-| [Character.AI](https://character.ai/)                                          | Yes         | No API      |                                             |
-| [ChatGLM2 6B & 130B](https://chatglm.cn/)                                      | Yes         | No API      | No Login required                           |
-| [ChatGPT](https://chatgpt.com)                                             | Yes         | Yes         | Web Browsing, Azure OpenAI service included |
-| [Claude](https://www.anthropic.com/claude)                                     | Yes         | Yes         |                                             |
-| [Code Llama](https://ai.meta.com/blog/code-llama-large-language-model-coding/) | Yes         | No API      |                                             |
-| [Cohere Aya 23](https://cohere.com/blog/aya23)                                 | No          | Yes         |                                             |
-| [Cohere Command R Models](https://cohere.com/command)                          | No          | Yes         |                                             |
-| [Copilot](https://copilot.microsoft.com/)                                      | Yes         | No API      |                                             |
-| [Dedao Learning Assistant](https://ai.dedao.cn/)                               | Coming soon | No API      |                                             |
-| [Falcon 180B](https://huggingface.co/tiiuae/falcon-180B-chat)                  | Yes         | No API      |                                             |
-| [Gemini](https://gemini.google.com/)                                           | Yes         | Yes         |                                             |
-| [Gemma 2B & 7B](https://blog.google/technology/developers/gemma-open-models/)  | Yes         | No API      |                                             |
-| [Gradio](https://gradio.app/)                                                  | Yes         | No API      | For Hugging Face space/self-deployed models |
-| [Groq Cloud](https://console.groq.com/docs/models)                             | No          | Yes         |                                             |
-| [HuggingChat](https://huggingface.co/chat/)                                    | Yes         | No API      |                                             |
-| [iFLYTEK SPARK](http://xinghuo.xfyun.cn/)                                      | Yes         | Coming soon |                                             |
-| [Kimi](https://kimi.moonshot.cn/               )                               | Yes         | No API      |                                             |
-| [Llama 2 13B & 70B](https://ai.meta.com/llama/)                                | Yes         | No API      |                                             |
-| [MOSS](https://moss.fastnlp.top/)                                              | Yes         | No API      |                                             |
-| [Perplexity](https://www.perplexity.ai/)                                       | Yes         | No API      |                                             |
-| [Phind](https://www.phind.com/)                                                | Yes         | No API      |                                             |
-| [Pi](https://pi.ai)                                                            | Yes         | No API      |                                             |
-| [Poe](https://poe.com/)                                                        | Yes         | Coming soon |                                             |
-| [SkyWork](https://neice.tiangong.cn/)                                          | Yes         | Coming soon |                                             |
-| [Tongyi Qianwen](http://tongyi.aliyun.com/)                                    | Yes         | Coming soon |                                             |
-| [Vicuna 13B & 33B](https://lmsys.org/blog/2023-03-30-vicuna/)                  | Yes         | No API      | No Login required                           |
-| [WizardLM 70B](https://github.com/nlpxucan/WizardLM)                           | Yes         | No API      |                                             |
-| [xAI Grok](https://x.ai)                                                       | No          | Yes         |                                             |
-| [YouChat](https://you.com/)                                                    | Yes         | No API      |                                             |
-| [You](https://you.com/)                                                        | Yes         | No API      |                                             |
-| [Zephyr](https://huggingface.co/spaces/HuggingFaceH4/zephyr-chat)              | Yes         | No API      |                                             |
+## 特性
 
-More is coming. Upvote your favorite bots in [these issues](https://github.com/ai-shifu/ChatALL/labels/more%20LLMs).
+- 🗣️ 选两个 AI（可同款），输入话题即开始正反辩论
+- 🧩 自动分配正/反立场，固定回合后结束
+- 🌐 跟随话题语言自动生成中/英文提示词
+- 🖥️ 纯桌面端，登录态保存在本地
+- 🧱 基于成熟开源项目 [ChatALL](https://github.com/ai-shifu/ChatALL) 二次开发
 
-### Note on Web-connected Bot Reliability
+## 项目状态
 
-Web-connected AI bots (those marked with "Web Access") are inherently less reliable and frequently face stability issues, as service providers regularly update their web interfaces and security measures. These web-based connections rely on reverse engineering and are difficult to maintain, often breaking unexpectedly. For a dependable experience, we strongly recommend using bots that offer API access whenever possible.
+🚧 **开发中。** 已完成：整体设计、辩论引擎（含单元测试）、核心可行性验证（已在真实网页上跑通"两个 AI 自动辩论"）。进行中：正式适配器与界面。详见 [`docs/PROGRESS.md`](docs/PROGRESS.md)。
 
-### Other features
+## 技术栈
 
-- Quick-prompt mode: send the next prompt without waiting for the previous request to complete
-- Save chat history locally, protect your privacy
-- Highlight the response you like, delete the bad
-- Enable/disable any bots at any time
-- Switch between one, two, or three-column view
-- Auto update to the latest version
-- Dark mode (contributed by @tanchekwei)
-- Short keys. Press <kbd>Ctrl</kbd> + <kbd>/</kbd> to know all of them (contributed by @tanchekwei)
-- Multiple chats (contributed by @tanchekwei)
-- Proxy setting (contributed by @msaong)
-- Prompt management (contributed by @tanchekwei)
-- Supports multiple languages (Chinese, English, German, French, Russian, Vietnamese, Korean, Japanese, Spanish, Italian)
-- Supports Windows, macOS and Linux
+Electron · Vue 3 · JavaScript(ESM) · Vitest。文档见 `docs/superpowers/`（设计 spec 与实现计划）。
 
-Planned features:
+## 本地开发（macOS）
 
-You are welcome to contribute to these features.
-
-- [ ] Deploy front-end to GitHub Pages
-
-## Privacy
-
-All chat history, settings and login data are saved locally on your computer.
-
-ChatALL collects anonymous usage data to help us improve the product. Including:
-
-- Which AI bots are prompted and how long the prompt is. Not including the prompt content.
-- How long the response is, and which response is deleted/highlighted. Not including the response content.
-
-## Prerequisites
-
-ChatALL is a client, not a proxy. Therefore, you must:
-
-1. Have working accounts and/or API tokens for the bots.
-2. Have reliable network connections to the bots.
-
-## Download / Install
-
-Download from https://github.com/ai-shifu/ChatALL/releases
-
-### On Windows
-
-Just download the \*-win.exe file and proceed with the setup.
-
-### On macOS
-
-For Apple Silicon Mac (M1, M2 CPU), download the \*-mac-arm64.dmg file.
-
-For other Macs, download \*-mac-x64.dmg file.
-
-If you are using [Homebrew](https://brew.sh/), you can also install it with:
+> 需要 Node 20（项目 `.nvmrc` 已指定）。
 
 ```bash
-brew install --cask chatall
-```
-
-### On Linux
-
-Debian-based Distributions: Download the .deb file, double click it and install the software.
-Arch-based Distributions: You can clone ChatALL from the AUR [here](https://aur.archlinux.org/packages/chatall-bin). You can install it manually or using an AUR helper like yay or paru.
-Other Distributions: Download the .AppImage file, make it executable, and enjoy the click-to-run experience. You can also use [AppimageLauncher](https://github.com/TheAssassin/AppImageLauncher).
-
-## Troubleshooting
-
-If you encounter any problems while using ChatALL, you can try the following methods to resolve them:
-
-1. **Refresh** - press <kbd>Ctrl</kbd> + <kbd>R</kbd> or <kbd>⌘</kbd> + <kbd>R</kbd>.
-2. **Restart** - exit ChatALL and run it again.
-3. **Re-login** - click the settings button in the upper right corner, then click the corresponding login/logout link to relogin the website.
-4. **Create a new chat** - click the `New Chat` button and send prompt again.
-
-If none of the above methods work, you can try **resetting ChatALL**. Note that this will delete all your settings and message history.
-
-You can reset ChatALL by deleting the following directories:
-
-- Windows: `C:\Users\<user>\AppData\Roaming\chatall\`
-- Linux: `/home/<user>/.config/chatall/`
-- macOS: `/Users/<user>/Library/Application Support/chatall/`
-
-If the problem persists, please [submit an issue](https://github.com/ai-shifu/ChatALL/issues).
-
-## For developers
-
-### Contribute a Bot
-
-[The guide](https://github.com/ai-shifu/ChatALL/wiki/%E5%A6%82%E4%BD%95%E6%B7%BB%E5%8A%A0%E4%B8%80%E4%B8%AA%E6%96%B0%E7%9A%84-AI-%E5%AF%B9%E8%AF%9D%E6%9C%BA%E5%99%A8%E4%BA%BA) may help you.
-
-### Run
-
-```bash
+git clone <this-repo>
+cd AIPKAI
+nvm use 20
 npm install
+
+# 运行单元测试（辩论引擎）
+npm test
+
+# 启动应用（开发模式）
 npm run electron:serve
 ```
 
-### Build
+## 致谢
 
-Build for your current platform:
+本项目基于 [**ChatALL**](https://github.com/ai-shifu/ChatALL)（作者 Sun Zhigang，Apache-2.0）二次开发，复用其 Electron/Vue 应用框架与多 AI 网页接入能力，特此致谢。
 
-```bash
-npm run electron:build
-```
+## 许可证
 
-Build for all platforms:
-
-```bash
-npm run electron:build -- -wml --x64 --arm64
-```
-
-## Credits
-
-### Contributors
-
-<a href="https://github.com/ai-shifu/ChatALL/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=ai-shifu/ChatALL" />
-</a>
-
-### Others
-
-- GPT-4 contributed much of the code
-- ChatGPT, Copilot and Google provide many solutions (ranked in order)
-- Inspired by [ChatHub](https://github.com/chathub-dev/chathub). Respect!
-
-## Sponsor
-
-If you like this project, please consider:
-
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/F1F8KZJGJ)
+本项目遵循 **Apache License 2.0**（与上游 ChatALL 一致），详见 [`LICENSE`](LICENSE)。
