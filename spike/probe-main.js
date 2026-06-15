@@ -141,6 +141,17 @@ function createWindow() {
   win.webContents.on("did-finish-load", inject);
   win.webContents.on("did-navigate-in-page", inject);
 
+  // 触发文件机制：外部 `touch spike/trigger.txt` 即自动运行 __probe.report()
+  const TRIGGER = path.join(__dirname, "trigger.txt");
+  try { if (fs.existsSync(TRIGGER)) fs.unlinkSync(TRIGGER); } catch (e) {}
+  setInterval(() => {
+    if (fs.existsSync(TRIGGER)) {
+      try { fs.unlinkSync(TRIGGER); } catch (e) {}
+      log("[event] trigger detected -> running __probe.report()");
+      win.webContents.executeJavaScript("window.__probe && window.__probe.report()").catch((e) => log(`[error] report ${e.message}`));
+    }
+  }, 2000);
+
   log(`[event] window created, loading ${url}`);
 }
 
