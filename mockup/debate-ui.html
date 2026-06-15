@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 辩论台 — 原型（两页流程）</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{--pro:#0a84ff;--pro-soft:#eaf3ff;--con:#ff453a;--con-soft:#ffeceb;--ink:#1d1d1f;--gray:#6e6e73;--line:#e8e8ed;}
+  body{font-family:-apple-system,"SF Pro Display","PingFang SC","Helvetica Neue",sans-serif;
+    background:radial-gradient(1200px 600px at 80% -10%,#eef4ff 0,transparent 55%),
+      radial-gradient(1000px 600px at 0% 110%,#fff0f0 0,transparent 55%),
+      linear-gradient(160deg,#fbfbfd 0,#f4f5f7 100%);
+    background-attachment:fixed;color:var(--ink);padding:36px;display:flex;justify-content:center;-webkit-font-smoothing:antialiased;}
+  .app{width:1080px;max-width:100%;background:rgba(255,255,255,.74);backdrop-filter:blur(30px);
+    border:1px solid rgba(255,255,255,.9);border-radius:26px;overflow:hidden;
+    box-shadow:0 40px 100px -20px rgba(40,50,90,.30),0 8px 30px -10px rgba(0,0,0,.08);}
+  .bar{height:50px;display:flex;align-items:center;padding:0 20px;gap:9px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.5);}
+  .dot{width:12px;height:12px;border-radius:50%;}.r{background:#ff5f57;}.y{background:#febc2e;}.g{background:#28c840;}
+  .brand{margin-left:13px;font-size:14px;font-weight:600;}.brand span{color:var(--gray);font-weight:400;}
+
+  /* 步骤切换 */
+  .steps{display:flex;gap:8px;padding:12px 24px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.4);}
+  .step{display:flex;align-items:center;gap:8px;padding:7px 16px;border-radius:999px;font-size:13px;font-weight:600;color:var(--gray);cursor:pointer;border:1px solid transparent;}
+  .step .n{width:20px;height:20px;border-radius:50%;background:#d8d8df;color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;}
+  .step.on{color:var(--pro);background:var(--pro-soft);border-color:#cfe4ff;}
+  .step.on .n{background:linear-gradient(135deg,#0a84ff,#0066ff);}
+  .arrow{color:#c9c9d0;align-self:center;}
+
+  .page{display:none;}.page.on{display:block;}
+  .sec-h{display:flex;align-items:center;gap:9px;padding:16px 26px 8px;font-size:13.5px;font-weight:700;}
+  .sec-h .sub{font-weight:400;color:var(--gray);font-size:12px;}
+  .live-dot{width:8px;height:8px;border-radius:50%;background:#28c840;box-shadow:0 0 0 3px rgba(40,200,64,.2);animation:pulse 1.6s infinite;}
+  @keyframes pulse{50%{opacity:.4;}}
+
+  /* 控制条 */
+  .controls{padding:20px 26px 10px;display:flex;gap:13px;align-items:center;flex-wrap:wrap;}
+  .topic{flex:1;min-width:300px;background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:13px 18px;font-size:15px;box-shadow:0 6px 18px -8px rgba(0,0,0,.1);}
+  .topic:focus{outline:none;border-color:var(--pro);}
+  .go{border:none;border-radius:14px;padding:13px 26px;font-size:15px;font-weight:600;color:#fff;cursor:pointer;background:linear-gradient(135deg,#0a84ff,#0066ff);box-shadow:0 10px 24px -8px rgba(10,132,255,.6);}
+  .go.off{background:#c9c9d0;box-shadow:none;cursor:not-allowed;}
+  .chips{display:flex;gap:10px;padding:0 26px 8px;flex-wrap:wrap;align-items:center;}
+  .chip{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:13.5px;box-shadow:0 4px 12px -8px rgba(0,0,0,.1);}
+  .chip .lbl{color:var(--gray);font-size:12.5px;}
+  .ic{width:22px;height:22px;border-radius:7px;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex:none;}
+  .ic.a{background:linear-gradient(135deg,#7b5cff,#5b3df0);}.ic.b{background:linear-gradient(135deg,#4a9eff,#0a6cff);}
+  .side{font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:999px;}
+  .side.pro{background:var(--pro-soft);color:var(--pro);}.side.con{background:var(--con-soft);color:var(--con);}
+  .login{font-size:11px;font-weight:600;display:flex;align-items:center;gap:5px;padding-left:7px;border-left:1px solid var(--line);}
+  .login .ld{width:7px;height:7px;border-radius:50%;display:inline-block;}
+  .login.ok{color:#1a9c3e;}.login.ok .ld{background:#28c840;}
+  .login.no{color:#d23b30;cursor:pointer;}.login.no .ld{background:#ff453a;}
+  .hint{font-size:12.5px;color:#d23b30;padding:0 26px 10px;display:flex;align-items:center;gap:6px;}
+
+  /* 网页版实况 */
+  .wvs{display:flex;gap:14px;padding:4px 22px 20px;}
+  .wv{flex:1;display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:13px;overflow:hidden;box-shadow:0 8px 22px -16px rgba(0,0,0,.3);}
+  .wv.big{height:300px;}.wv.small{height:210px;}
+  .wv-bar{display:flex;align-items:center;gap:7px;padding:6px 10px;background:#ececef;border-bottom:1px solid var(--line);}
+  .wv-bar .mini{display:flex;gap:4px;}.wv-bar .mini i{width:8px;height:8px;border-radius:50%;display:inline-block;}
+  .url{flex:1;background:#fff;border:1px solid #e0e0e6;border-radius:7px;padding:3px 9px;font-size:11px;color:#555;display:flex;align-items:center;gap:5px;}
+  .url .lock{color:#28a745;font-size:10px;}
+  .stt{font-size:9.5px;font-weight:700;padding:1px 7px;border-radius:6px;}
+  .stt.ok{background:#effbf1;color:#1a9c3e;border:1px solid #c7eed0;}
+  .stt.no{background:#fff4f3;color:#d23b30;border:1px solid #ffd6d3;}
+  .wv-body{flex:1;overflow:hidden;padding:12px 13px;font-size:11.5px;}
+  .wv-site{display:flex;align-items:center;gap:7px;font-weight:700;font-size:12px;padding-bottom:9px;border-bottom:1px solid #f0f0f3;margin-bottom:10px;}
+  .m{margin-bottom:9px;line-height:1.5;}
+  .m .inj{display:inline-block;font-size:9.5px;color:#0a84ff;background:#eaf3ff;border:1px solid #cfe4ff;border-radius:5px;padding:0 6px;font-weight:600;margin-bottom:3px;}
+  .m.u .t{background:#eef1ff;border:1px solid #dfe4ff;color:#1c2440;border-radius:9px;padding:7px 10px;}
+  .m.r .t{background:#f6f6f8;border:1px solid #ececf0;border-radius:9px;padding:7px 10px;}
+  .m .lab{font-size:10px;color:#9a9aa2;margin-bottom:3px;}
+  .typing{color:#9a9aa2;font-size:11px;display:flex;align-items:center;gap:5px;}
+  .typing i{width:5px;height:5px;border-radius:50%;background:#bbb;display:inline-block;animation:bl 1.2s infinite;}
+  .typing i:nth-child(2){animation-delay:.2s;}.typing i:nth-child(3){animation-delay:.4s;}
+  @keyframes bl{0%,60%,100%{opacity:.25;}30%{opacity:1;}}
+  .loginwall{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:14px;}
+  .loginwall .lg{font-weight:700;font-size:13px;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+  .qr{width:80px;height:80px;border-radius:10px;margin-bottom:9px;background:repeating-linear-gradient(0deg,#1d1d1f 0 4px,#fff 4px 8px),repeating-linear-gradient(90deg,#1d1d1f 0 4px,transparent 4px 8px);background-blend-mode:multiply;border:4px solid #fff;box-shadow:0 0 0 1px var(--line);}
+  .loginwall .tip{font-size:11px;color:var(--gray);max-width:210px;line-height:1.5;}
+
+  /* 页面二 头 */
+  .runhead{display:flex;align-items:center;gap:12px;padding:18px 26px 6px;flex-wrap:wrap;}
+  .runhead .t{font-size:16px;font-weight:700;flex:1;min-width:200px;}
+  .prog{font-size:12.5px;color:var(--gray);background:#fff;border:1px solid var(--line);border-radius:999px;padding:5px 13px;}
+  .stop{border:1px solid var(--con);color:var(--con);background:#fff;border-radius:12px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;}
+  .copy{border:1px solid var(--pro);color:var(--pro);background:#fff;border-radius:12px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;}
+  /* 确认弹窗 */
+  .mask{display:none;position:fixed;inset:0;background:rgba(20,24,40,.32);backdrop-filter:blur(2px);align-items:center;justify-content:center;z-index:9;}
+  .mask.on{display:flex;}
+  .modal{background:#fff;border-radius:20px;padding:26px 28px;width:380px;box-shadow:0 30px 80px -20px rgba(0,0,0,.4);text-align:center;}
+  .modal h3{font-size:17px;margin-bottom:14px;}
+  .modal .conf{text-align:left;background:#f7f7fa;border:1px solid var(--line);border-radius:12px;padding:14px 16px;font-size:13.5px;line-height:1.9;margin-bottom:18px;}
+  .modal .conf b{color:var(--pro);}
+  .modal .acts{display:flex;gap:10px;}
+  .modal .acts button{flex:1;border-radius:12px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--gray);}
+  .modal .acts .ok{border:none;color:#fff;background:linear-gradient(135deg,#0a84ff,#0066ff);}
+
+  /* 辩论记录 */
+  .log{padding:8px 26px 14px;max-height:320px;overflow:hidden;}
+  .turn{margin-bottom:15px;display:flex;}.turn.con{justify-content:flex-end;}
+  .lb{max-width:78%;}
+  .lb .who{font-size:12px;font-weight:600;margin-bottom:5px;display:flex;align-items:center;gap:7px;}
+  .lb .b{padding:12px 16px;border-radius:18px;font-size:14px;line-height:1.65;box-shadow:0 8px 22px -16px rgba(0,0,0,.3);}
+  .turn.pro .b{background:linear-gradient(135deg,#faf7ff,#f0eaff);border:1px solid #e2d6ff;color:#28194d;border-bottom-left-radius:5px;}
+  .turn.con .b{background:linear-gradient(135deg,#f4f9ff,#eaf3ff);border:1px solid #d6e8ff;color:#0a2540;border-bottom-right-radius:5px;}
+  .turn.con .who{justify-content:flex-end;}
+  .rt{text-align:center;color:#b0b0b8;font-size:12px;font-weight:600;letter-spacing:.5px;margin:4px 0 13px;}
+  .engine-wrap{border-top:1px solid var(--line);background:#f3f3f6;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="bar">
+    <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+    <div class="brand">⚔️ AI 辩论台 <span>· 白嫖网页版 · 不调 API</span></div>
+  </div>
+
+  <!-- 步骤切换 -->
+  <div class="steps">
+    <div class="step on" id="s1" onclick="go(1)"><span class="n">1</span>准备 / 登录</div>
+    <span class="arrow">→</span>
+    <div class="step" id="s2" onclick="go(2)"><span class="n">2</span>辩论</div>
+  </div>
+
+  <!-- ════════ 页面一：准备 / 登录 ════════ -->
+  <div class="page on" id="p1">
+    <div class="controls">
+      <input class="topic" value="AI 会不会在十年内取代大部分程序员？">
+      <button class="go off" onclick="confirmStart()">▶ 开始辩论</button>
+    </div>
+    <div class="chips">
+      <div class="chip"><span class="lbl">正方</span><span class="ic a">DS</span>DeepSeek ▾<span class="side pro">支持</span><span class="login no"><span class="ld"></span>未登录</span></div>
+      <div class="chip"><span class="lbl">反方</span><span class="ic b">DS</span>DeepSeek ▾<span class="side con">反对</span><span class="login no"><span class="ld"></span>未登录</span></div>
+      <div class="chip"><span class="lbl">回合</span>5 ▾</div>
+    </div>
+    <div class="hint">⚠️ DeepSeek 未登录。同账号登录一次即可（正反两侧通用），登录后自动可开始（可点步骤②预览辩论页）</div>
+
+    <div class="sec-h">🔐 登录区 <span class="sub">· 读网页 HTML 源码判断登录态；同厂商共享登录，登录一次两侧通用</span></div>
+    <div class="wvs">
+      <div class="wv big">
+        <div class="wv-bar"><span class="mini"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></span><span class="url"><span class="lock">🔒</span> chat.deepseek.com/sign_in</span><span class="stt no">未登录</span></div>
+        <div class="loginwall">
+          <div class="lg"><span class="ic b">DS</span>登录 DeepSeek</div>
+          <div class="qr"></div>
+          <div class="tip">检测到未登录 → 这是 DeepSeek 真实登录页，请直接扫码/登录</div>
+        </div>
+      </div>
+      <div class="wv big">
+        <div class="wv-bar"><span class="mini"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></span><span class="url"><span class="lock">🔒</span> chat.deepseek.com</span><span class="stt no">等待登录</span></div>
+        <div class="loginwall">
+          <div class="lg"><span class="ic b">DS</span>DeepSeek · 反方</div>
+          <div class="tip">同一 DeepSeek 账号，登录左侧后此处自动就绪（无需重复登录）</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ 页面二：辩论 ════════ -->
+  <div class="page" id="p2">
+    <div class="runhead">
+      <div class="t">辩题：AI 会不会在十年内取代大部分程序员？</div>
+      <span class="prog">第 2 / 5 回合</span>
+      <button class="copy" onclick="alert('已复制整场辩论记录')">📋 复制全文</button>
+      <button class="stop" onclick="go(1)">⏹ 停止 / 重设</button>
+    </div>
+
+    <div class="sec-h">📋 辩论记录 <span class="sub">· 汇总双方发言（主视图）</span></div>
+    <div class="log">
+      <div class="rt">第 1 回合</div>
+      <div class="turn pro"><div class="lb"><div class="who"><span class="ic a">DS</span>DeepSeek · 正方</div><div class="b">AI 代码生成能力指数级提升，重复性的 CRUD、样板代码已大量自动化，十年足够接管大部分常规开发工作。</div></div></div>
+      <div class="turn con"><div class="lb"><div class="who"><span class="ic b">DS</span>DeepSeek · 反方</div><div class="b">生成代码 ≠ 软件工程。真正难点在理解模糊需求、架构权衡、跨团队协作，这些短期内无法替代，AI 只会成为工具。</div></div></div>
+      <div class="rt">第 2 回合</div>
+      <div class="turn pro"><div class="lb"><div class="who"><span class="ic a">DS</span>DeepSeek · 正方</div><div class="b">「理解需求」恰恰是 AI 进步最快的方向，需求文档→代码的链路正在被打通，中间人力会被大幅压缩。</div></div></div>
+    </div>
+
+    <div class="engine-wrap">
+      <div class="sec-h"><span class="live-dot"></span>🖥️ 网页版实况 <span class="sub">· 后台引擎：往真实网页注入文字、读回答</span></div>
+      <div class="wvs">
+        <div class="wv small">
+          <div class="wv-bar"><span class="mini"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></span><span class="url"><span class="lock">🔒</span> chat.deepseek.com</span><span class="stt ok">正方·已登录</span></div>
+          <div class="wv-body">
+            <div class="wv-site"><span class="ic a">DS</span>DeepSeek · 正方</div>
+            <div class="m u"><span class="inj">⤵ 注入对方的话</span><div class="t">对方说『生成代码≠软件工程…』，请继续反驳。</div></div>
+            <div class="m r"><div class="lab">DeepSeek · 正方</div><div class="typing">正在回答 <i></i><i></i><i></i></div></div>
+          </div>
+        </div>
+        <div class="wv small">
+          <div class="wv-bar"><span class="mini"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></span><span class="url"><span class="lock">🔒</span> chat.deepseek.com</span><span class="stt ok">反方·已登录</span></div>
+          <div class="wv-body">
+            <div class="wv-site"><span class="ic b">DS</span>DeepSeek · 反方</div>
+            <div class="m u"><span class="inj">⤵ 注入对方的话</span><div class="t">对方说『…十年足够接管常规开发』，请反驳。</div></div>
+            <div class="m r"><div class="lab">DeepSeek · 反方</div><div class="t">生成代码 ≠ 软件工程，真正难点在需求理解与架构权衡…</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 开辩前确认弹窗 -->
+<div class="mask" id="mask">
+  <div class="modal">
+    <h3>确认开始辩论？</h3>
+    <div class="conf">
+      辩题：<b>AI 会不会十年内取代大部分程序员</b><br>
+      正方：<b>DeepSeek</b>（支持）<br>
+      反方：<b>DeepSeek</b>（反对）<br>
+      回合：<b>5 回合</b>
+    </div>
+    <div class="acts">
+      <button onclick="closeConfirm()">取消</button>
+      <button class="ok" onclick="closeConfirm();go(2)">确认开始</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function confirmStart(){document.getElementById('mask').classList.add('on');}
+  function closeConfirm(){document.getElementById('mask').classList.remove('on');}
+  function go(n){
+    document.getElementById('p1').classList.toggle('on',n===1);
+    document.getElementById('p2').classList.toggle('on',n===2);
+    document.getElementById('s1').classList.toggle('on',n===1);
+    document.getElementById('s2').classList.toggle('on',n===2);
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+</script>
+</body>
+</html>
