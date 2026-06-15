@@ -114,8 +114,17 @@ function createWindow() {
     webPreferences: { partition: "persist:probe" }, // 持久化登录
   });
   win.webContents.setUserAgent(
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
   );
+  // 允许登录弹窗在同会话内打开
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    log(`[event] window.open -> ${url}`);
+    return { action: "allow" };
+  });
+  // Cmd+R 重新加载（白屏时手动刷新）
+  win.webContents.on("before-input-event", (e, input) => {
+    if (input.meta && input.key.toLowerCase() === "r") { log("[event] Cmd+R reload"); win.webContents.reload(); }
+  });
 
   // —— 日志：页面 console 全量落盘 ——
   win.webContents.on("console-message", (event, level, message, line, sourceId) => {
