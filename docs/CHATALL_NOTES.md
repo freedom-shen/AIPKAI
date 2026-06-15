@@ -213,3 +213,21 @@ From **`package.json`** scripts:
   ```
   A timeout-kill (exit 124) after a clean compile is acceptable; final visual confirmation of the
   window is a manual human step.
+
+## 9. 站点适配实测（SPIKE Task 7.5 结果）
+
+用 `spike/probe-main.js`（独立 Electron + webview，持久化 partition、UA=Chrome/130）在真实登录后的
+**Kimi（www.kimi.com）** 上验证：登录检测 / 注入 / 读流式回答 / 完成判定 **全部通过**。
+端到端实证：注入"写一段100字散文介绍西湖春天" → Kimi 流式作答（len 0→13→36→…→149）→ 完整读出答案。
+
+### Kimi（www.kimi.com）已确认选择器
+| 能力 | 选择器 / 信号 | 备注 |
+|---|---|---|
+| 输入框 | `.chat-input-editor`（**contenteditable DIV**，role=textbox） | 非 textarea；用 `document.execCommand('insertText')` 或设置 textContent + input 事件，再派发 Enter `keydown` 发送 |
+| 登录检测 | 存在 `.chat-input-editor` 即视为已登录 | 未登录时该输入框不存在/为登录页 |
+| 回答容器 | 最后一个 `.chat-content-item-assistant` 内的 `.markdown` | 用户消息是 `.chat-content-item-user`；助手是 `.chat-content-item-assistant`；正文在 `.markdown`/`.markdown-container` |
+| **完成判定** | **无 `.send-button-container.stop` 即完成** | 生成中按钮类含 `stop`（`send-button-container disabled stop`）；完成后 `stop` 消失（`send-button-container disabled`）。这是可靠信号，优于文本稳定法 |
+| 新建对话 | 侧栏"新建会话"（`⌘K`）按钮 | 选择器待补（下次 inspect 侧栏时记录）；用于每场辩论开新线程 |
+
+> 结论：**"纯网页 DOM 驱动 + 不用任何 API" 路线对 Kimi 可行。** 通义千问待同法验证后补本表。
+> 适配器实现（Task 8）按本表选择器落地；完成判定用 `.send-button-container.stop` 的存在与否。
