@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>AI 辩论台 — 两个 Kimi 辩论 Demo</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:-apple-system,"PingFang SC",sans-serif;background:#f4f5f7;height:100vh;display:flex;flex-direction:column;}
+  .bar{display:flex;gap:10px;align-items:center;padding:12px 16px;background:#fff;border-bottom:1px solid #e8e8ed;}
+  .bar input{flex:1;padding:10px 14px;border:1.5px solid #e8e8ed;border-radius:10px;font-size:14px;}
+  .bar button{padding:10px 22px;border:none;border-radius:10px;background:linear-gradient(135deg,#0a84ff,#0066ff);color:#fff;font-weight:600;font-size:14px;cursor:pointer;}
+  .bar button:disabled{background:#c9c9d0;cursor:not-allowed;}
+  .bar .st{font-size:12px;color:#6e6e73;min-width:120px;}
+  .main{flex:1;display:flex;min-height:0;}
+  .log{flex:1.4;overflow:auto;padding:18px 22px;}
+  .engine{flex:1;display:flex;flex-direction:column;border-left:1px solid #e8e8ed;background:#ececf0;}
+  .engine webview{flex:1;width:100%;border-bottom:1px solid #ddd;background:#fff;}
+  .elabel{font-size:11px;color:#6e6e73;padding:4px 10px;background:#e3e3e8;font-weight:600;}
+  .turn{margin-bottom:14px;display:flex;}
+  .turn.con{justify-content:flex-end;}
+  .b{max-width:82%;padding:11px 15px;border-radius:16px;font-size:14px;line-height:1.65;white-space:pre-wrap;}
+  .turn.pro .b{background:#f0eaff;border:1px solid #e2d6ff;color:#28194d;border-bottom-left-radius:4px;}
+  .turn.con .b{background:#eaf3ff;border:1px solid #d6e8ff;color:#0a2540;border-bottom-right-radius:4px;}
+  .who{font-size:11px;color:#888;margin-bottom:4px;}
+  .rt{text-align:center;color:#aaa;font-size:12px;font-weight:600;margin:6px 0 12px;}
+  .err{color:#d23b30;font-size:13px;text-align:center;margin:10px;}
+</style>
+</head>
+<body>
+  <div class="bar">
+    <input id="topic" value="AI 会不会在十年内取代大部分程序员？">
+    <span>回合 <select id="rounds"><option>2</option><option>3</option></select></span>
+    <button id="start" disabled>检测登录中…</button>
+    <span class="st" id="status"></span>
+  </div>
+  <div class="main">
+    <div class="log" id="log"></div>
+    <div class="engine">
+      <div class="elabel">🟣 正方 Kimi（webview · 真实网页）</div>
+      <webview id="pro" src="https://www.kimi.com" partition="persist:probe"
+        useragent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"></webview>
+      <div class="elabel">🔵 反方 Kimi（webview · 真实网页）</div>
+      <webview id="con" src="https://www.kimi.com" partition="persist:probe"
+        useragent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"></webview>
+    </div>
+  </div>
+  <script type="module" src="./debate-demo-renderer.js"></script>
+</body>
+</html>
