@@ -9,6 +9,10 @@ const UA =
 // 第一期：正反方都用 Kimi（同账号、两条独立对话；通义待实测后加入）
 const PRO_ADAPTER = kimi;
 const CON_ADAPTER = kimi;
+// 同一模型 → 共享同一持久化分区（登录一次两侧通用）；不同模型 → 各自独立分区
+const SAME_MODEL = PRO_ADAPTER.id === CON_ADAPTER.id;
+const PRO_PARTITION = "persist:" + PRO_ADAPTER.id;
+const CON_PARTITION = SAME_MODEL ? PRO_PARTITION : "persist:" + CON_ADAPTER.id;
 
 const PHASE_LABEL = { setup: "准备中", running: "辩论进行中", done: "辩论已结束", paused: "已暂停" };
 
@@ -51,9 +55,11 @@ export default function App() {
       const [p, c] = await Promise.all([check(proRef, "pro"), check(conRef, "con")]);
       if (!alive) return;
       setLogin({ pro: p, con: c });
-      // 同账号共享 session：一侧已登录、另一侧仍未登录 → 自动刷新滞后侧以同步登录态
-      if (p === "ok" && c === "no") maybeReload(conRef, "con");
-      else if (c === "ok" && p === "no") maybeReload(proRef, "pro");
+      // 仅当正反方为「同一模型」(共享分区) 时：一侧已登录、另一侧仍未登录 → 自动刷新滞后侧同步登录态
+      if (SAME_MODEL) {
+        if (p === "ok" && c === "no") maybeReload(conRef, "con");
+        else if (c === "ok" && p === "no") maybeReload(proRef, "pro");
+      }
     };
     const id = setInterval(tick, 2500);
     tick();
@@ -149,11 +155,11 @@ export default function App() {
         </div>
         {/* 正方 webview（常驻，保持存活） */}
         <div className={"webview-host " + (tab === "pro" ? "" : "hidden")}>
-          <webview ref={proRef} className="wv" src={PRO_ADAPTER.url} partition="persist:kimi" useragent={UA} allowpopups="true" webpreferences="backgroundThrottling=false" />
+          <webview ref={proRef} className="wv" src={PRO_ADAPTER.url} partition={PRO_PARTITION} useragent={UA} allowpopups="true" webpreferences="backgroundThrottling=false" />
         </div>
         {/* 反方 webview */}
         <div className={"webview-host " + (tab === "con" ? "" : "hidden")}>
-          <webview ref={conRef} className="wv" src={CON_ADAPTER.url} partition="persist:kimi" useragent={UA} allowpopups="true" webpreferences="backgroundThrottling=false" />
+          <webview ref={conRef} className="wv" src={CON_ADAPTER.url} partition={CON_PARTITION} useragent={UA} allowpopups="true" webpreferences="backgroundThrottling=false" />
         </div>
       </div>
     </div>
