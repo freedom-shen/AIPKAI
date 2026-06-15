@@ -18,8 +18,12 @@ const PHASE_LABEL = { setup: "准备中", running: "辩论进行中", done: "辩
 
 export default function App() {
   const [tab, setTab] = useState("chat"); // chat | pro | con
-  const [topic, setTopic] = useState("AI 会不会在十年内取代大部分程序员");
+  const [topic, setTopic] = useState("");
   const [rounds, setRounds] = useState(5);
+  const [history, setHistory] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("debate-history") || "[]"); } catch { return []; }
+  });
+  const [viewingId, setViewingId] = useState(null); // 正在查看的历史辩论 id（null=当前/准备）
   const [phase, setPhase] = useState("setup");
   const [login, setLogin] = useState({ pro: "chk", con: "chk" }); // chk | ok | no
   const [record, setRecord] = useState([]); // {round, stance, text}
@@ -66,18 +70,23 @@ export default function App() {
     return () => { alive = false; clearInterval(id); };
   }, []);
 
-  const ready = login.pro === "ok" && login.con === "ok";
-  const progress = rounds ? Math.min(1, (record.length) / (rounds * 2)) : 0;
+  const ready = login.pro === "ok" && login.con === "ok" && topic.trim().length > 0;
+
+  // 历史持久化
+  useEffect(() => { try { localStorage.setItem("debate-history", JSON.stringify(history)); } catch {} }, [history]);
 
   async function start() {
     if (!ready || phase === "running") return;
     setErrorMsg("");
     setRecord([]);
     setPartial(null);
+    setViewingId(null);
     setPhase("running");
     setTab("chat");
     const ctrl = new AbortController();
     abortRef.current = ctrl;
+    const turns = [];
+    const startedTopic = topic, startedRounds = rounds;
     const pro = makeParticipant(proRef.current, PRO_ADAPTER);
     const con = makeParticipant(conRef.current, CON_ADAPTER);
     await runDebate(
@@ -88,10 +97,16 @@ export default function App() {
         onChunk: ({ round, stance, partial }) => setPartial({ round, stance, text: partial }),
         onTurn: ({ round, stance, text }) => {
           console.log("[debate] turn done", round, stance, "len", text.length);
+          turns.push({ round, stance, text });
           setRecord((r) => [...r, { round, stance, text }]);
           setPartial(null);
         },
-        onComplete: () => { console.log("[debate] complete"); setPhase("done"); setPartial(null); },
+        onComplete: () => {
+          console.log("[debate] complete");
+          setPhase("done"); setPartial(null);
+          const entry = { id: String(Date.now()), topic: startedTopic, rounds: startedRounds, record: turns.slice(), ts: Date.now() };
+          setHistory((h) => [entry, ...h].slice(0, 50));
+        },
         onAbnormal: (e) => { console.log("[debate] abnormal", e.reason); setErrorMsg("检测到异常（" + e.reason + "），辩论已暂停，请重新登录或重试。"); setPhase("paused"); setPartial(null); },
         onError: (e) => { console.log("[debate] error", e.message); setErrorMsg("出错：" + e.message); setPhase("paused"); setPartial(null); },
       },
@@ -110,24 +125,19 @@ export default function App() {
     setRecord([]);
     setPartial(null);
     setErrorMsg("");
+    setViewingId(null);
     setPhase("setup");
     setTab("chat");
   }
 
-  function copyAll() {
-    const text = record
+  function copyRecord(rec) {
+    const text = (rec || [])
       .map((t) => `【${t.stance === Stance.PRO ? "正方" : "反方"} Kimi】\n${t.text}`)
       .join("\n\n");
     navigator.clipboard?.writeText(text);
   }
 
-  // 按回合分组渲染
-  const grouped = [];
-  for (const t of record) {
-    let g = grouped.find((x) => x.round === t.round);
-    if (!g) { g = { round: t.round, turns: [] }; grouped.push(g); }
-    g.turns.push(t);
-  }
+  const viewingItem = viewingId ? history.find((h) => h.id === viewingId) : null;
 
   return (
     <div className="app">
@@ -148,19 +158,29 @@ export default function App() {
       </div>
 
       <div className="stage">
-        {/* 对话标签 */}
-        <div className={tab === "chat" ? "" : "hidden"}>
-          {phase === "setup" ? (
-            <Setup
-              topic={topic} setTopic={setTopic} rounds={rounds} setRounds={setRounds}
-              login={login} ready={ready} onStart={start}
-            />
-          ) : (
-            <Debate
-              topic={topic} rounds={rounds} grouped={grouped} partial={partial}
-              phase={phase} errorMsg={errorMsg} onCopy={copyAll} onStop={stop} onNew={newDebate}
-            />
-          )}
+        {/* 对话标签：左历史 + 右主区 */}
+        <div className={"chat-layout " + (tab === "chat" ? "" : "hidden")}>
+          <aside className="sidebar">
+            <button className="side-new" onClick={newDebate}>＋ 新建辩论</button>
+            <div className="hist">
+              {history.length === 0 && <div className="hist-empty">还没有历史辩论</div>}
+              {history.map((h) => (
+                <div key={h.id} className={"hist-item" + (viewingId === h.id ? " on" : "")} onClick={() => setViewingId(h.id)}>
+                  <div className="ht">{h.topic || "未命名辩论"}</div>
+                  <div className="hm">{new Date(h.ts).toLocaleDateString()} · {h.rounds} 回合</div>
+                </div>
+              ))}
+            </div>
+          </aside>
+          <div className="main-pane">
+            {viewingItem ? (
+              <Debate topic={viewingItem.topic} rounds={viewingItem.rounds} record={viewingItem.record} partial={null} phase="done" errorMsg="" onCopy={copyRecord} onNew={newDebate} />
+            ) : phase === "setup" ? (
+              <Setup topic={topic} setTopic={setTopic} rounds={rounds} setRounds={setRounds} login={login} ready={ready} onStart={start} />
+            ) : (
+              <Debate topic={topic} rounds={rounds} record={record} partial={partial} phase={phase} errorMsg={errorMsg} onCopy={copyRecord} onStop={stop} onNew={newDebate} />
+            )}
+          </div>
         </div>
         {/* 正方 webview（常驻，保持存活） */}
         <div className={"webview-host " + (tab === "pro" ? "" : "hidden")}>
@@ -214,15 +234,21 @@ function Setup({ topic, setTopic, rounds, setRounds, login, ready, onStart }) {
   );
 }
 
-function Debate({ topic, rounds, grouped, partial, phase, errorMsg, onCopy, onStop, onNew }) {
-  const done = grouped.reduce((n, g) => n + g.turns.length, 0);
+function Debate({ topic, rounds, record, partial, phase, errorMsg, onCopy, onStop, onNew }) {
+  const grouped = [];
+  for (const t of record || []) {
+    let g = grouped.find((x) => x.round === t.round);
+    if (!g) { g = { round: t.round, turns: [] }; grouped.push(g); }
+    g.turns.push(t);
+  }
+  const done = (record || []).length;
   const pct = Math.min(100, Math.round((done / (rounds * 2)) * 100));
   return (
     <div className="debate">
       <div className="debate-head">
         <div className="topic">{topic}</div>
         <div className="progress"><div className="bar"><i style={{ width: pct + "%" }} /></div>第 {Math.min(rounds, Math.ceil(done / 2) || 1)} / {rounds} 回合</div>
-        <button className="btn-ghost" onClick={onCopy}>复制全文</button>
+        <button className="btn-ghost" onClick={() => onCopy(record)}>复制全文</button>
         {phase === "running"
           ? <button className="btn-stop" onClick={onStop}>停止</button>
           : <button className="btn-primary" onClick={onNew}>＋ 新建辩论</button>}
