@@ -42,10 +42,12 @@ const PROBE = `
         .find(b => /停止|停|stop/i.test((b.innerText||b.getAttribute('aria-label')||'')));
     },
     _answer() {
-      const cand = [...document.querySelectorAll('div,article,section,p')]
-        .map(e => ({ e, len: (e.innerText||'').trim().length }))
-        .filter(x => x.len > 20 && x.e.querySelectorAll('textarea,button,input').length === 0)
-        .sort((a,b)=>b.len-a.len);
+      // Kimi: 最后一条 assistant 消息里的 .markdown
+      const items = document.querySelectorAll('.chat-content-item-assistant, .segment-assistant');
+      const last = items[items.length - 1];
+      if (last) { const md = last.querySelector('.markdown, .markdown-container'); return ((md||last).innerText||'').trim(); }
+      const cand = [...document.querySelectorAll('div,p')].map(e => ({ e, len:(e.innerText||'').trim().length }))
+        .filter(x => x.len > 20 && x.e.querySelectorAll('textarea,button,input').length === 0).sort((a,b)=>b.len-a.len);
       return cand[0] ? cand[0].e.innerText.trim() : '';
     },
     dump() {
@@ -96,22 +98,19 @@ const PROBE = `
       return { buttons: btns.length, msgEls: msgs.length };
     },
     async report(q) {
-      q = q || '用一句话介绍你自己';
+      q = q || '请写一段大约100字的散文，介绍杭州西湖的春天';
       console.log('__PROBE__ REPORT start url=' + location.href);
-      this.dump();
       if (!this.isLoggedIn()) { console.log('__PROBE__ REPORT NOT_LOGGED_IN 请先登录再运行 __probe.report()'); return; }
       console.log('__PROBE__ REPORT inject q=' + JSON.stringify(q));
       this.inject(q);
-      let lastLen = 0;
-      for (let i = 0; i < 16; i++) {
-        await new Promise(r => setTimeout(r, 1500));
-        const a = this._answer(); const c = !this._stopBtn();
-        console.log('__PROBE__ tick' + i + ' len=' + a.length + ' complete=' + c + ' head=' + JSON.stringify(a.slice(0,60)));
-        if (c && a.length > 20 && a.length === lastLen && i > 2) {
-          console.log('__PROBE__ REPORT DONE finalLen=' + a.length);
-          console.log('__PROBE__ FINAL ' + a.slice(0, 600));
-          return;
-        }
+      let lastLen = 0, stableCount = 0;
+      for (let i = 0; i < 20; i++) {
+        await new Promise(r => setTimeout(r, 1200));
+        const a = this._answer();
+        const sb = document.querySelector('.send-button-container');
+        console.log('__PROBE__ tick' + i + ' len=' + a.length + ' sendbtn=' + (sb ? JSON.stringify(sb.className) : 'none') + ' head=' + JSON.stringify(a.slice(0,50)));
+        if (a.length > 20 && a.length === lastLen) { stableCount++; } else { stableCount = 0; }
+        if (stableCount >= 3) { console.log('__PROBE__ REPORT DONE finalLen=' + a.length); console.log('__PROBE__ FINAL ' + a.slice(0, 600)); return; }
         lastLen = a.length;
       }
       console.log('__PROBE__ REPORT TIMEOUT lastLen=' + lastLen);
