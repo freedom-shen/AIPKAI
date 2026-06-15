@@ -80,6 +80,21 @@ const PROBE = `
     },
     latestAnswer() { const a = this._answer(); console.log('__PROBE__ latestAnswer len=' + a.length + ' head=' + JSON.stringify(a.slice(0,80))); return a; },
     isComplete() { const c = !this._stopBtn(); console.log('__PROBE__ isComplete=' + c); return c; },
+    // 富 DOM 探查（不注入），用于发现"回答容器/发送/停止"真实选择器
+    inspect() {
+      const btns = [...document.querySelectorAll('button,[role=button],[class*=send],[class*=stop]')].map((e,i)=>({
+        i, txt:(e.innerText||'').trim().slice(0,16), aria:e.getAttribute('aria-label')||'',
+        title:e.getAttribute('title')||'', svg:!!e.querySelector('svg'), cls:(e.className||'').toString().slice(0,50)
+      }));
+      console.log('__PROBE__ inspect buttons=' + JSON.stringify(btns));
+      const re = /message|answer|markdown|segment|response|bubble|reply|chat-content|md-|assistant|paragraph/i;
+      const msgs = [...document.querySelectorAll('div,article,section')]
+        .filter(e => re.test((e.className||'').toString()))
+        .map(e => ({ cls:(e.className||'').toString().slice(0,60), len:(e.innerText||'').trim().length, head:(e.innerText||'').trim().slice(0,50) }))
+        .filter(x => x.len > 0).slice(0, 40);
+      console.log('__PROBE__ inspect msgEls=' + JSON.stringify(msgs));
+      return { buttons: btns.length, msgEls: msgs.length };
+    },
     async report(q) {
       q = q || '用一句话介绍你自己';
       console.log('__PROBE__ REPORT start url=' + location.href);
@@ -153,11 +168,18 @@ function createWindow() {
   // 触发文件机制：外部 `touch spike/trigger.txt` 即自动运行 __probe.report()
   const TRIGGER = path.join(__dirname, "trigger.txt");
   try { if (fs.existsSync(TRIGGER)) fs.unlinkSync(TRIGGER); } catch (e) {}
+  const INSPECT = path.join(__dirname, "inspect.txt");
+  try { if (fs.existsSync(INSPECT)) fs.unlinkSync(INSPECT); } catch (e) {}
   setInterval(() => {
     if (fs.existsSync(TRIGGER)) {
       try { fs.unlinkSync(TRIGGER); } catch (e) {}
       log("[event] trigger detected -> running __probe.report()");
       win.webContents.executeJavaScript("window.__probe && window.__probe.report()").catch((e) => log(`[error] report ${e.message}`));
+    }
+    if (fs.existsSync(INSPECT)) {
+      try { fs.unlinkSync(INSPECT); } catch (e) {}
+      log("[event] inspect trigger -> running __probe.inspect()");
+      win.webContents.executeJavaScript("window.__probe && window.__probe.inspect()").catch((e) => log(`[error] inspect ${e.message}`));
     }
   }, 2000);
 
