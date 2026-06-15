@@ -112,6 +112,7 @@ body {
 .progress .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--pro), var(--con)); }
 .btn-ghost { border: 1px solid var(--line); background: #fff; border-radius: 11px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--ink); }
 .btn-stop { border: none; background: var(--red); color: #fff; border-radius: 11px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.btn-primary { border: none; background: linear-gradient(135deg, var(--pro), var(--con)); color: #fff; border-radius: 11px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 6px 16px -8px rgba(92,76,255,.5); }
 
 .round-sep { text-align: center; color: #b7b7c0; font-size: 12px; font-weight: 600; margin: 18px 0 14px; }
 .turn { display: flex; gap: 10px; margin-bottom: 16px; }

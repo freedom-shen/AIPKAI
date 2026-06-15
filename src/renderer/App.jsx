@@ -105,6 +105,15 @@ export default function App() {
     setPartial(null);
   }
 
+  function newDebate() {
+    abortRef.current?.abort();
+    setRecord([]);
+    setPartial(null);
+    setErrorMsg("");
+    setPhase("setup");
+    setTab("chat");
+  }
+
   function copyAll() {
     const text = record
       .map((t) => `【${t.stance === Stance.PRO ? "正方" : "反方"} Kimi】\n${t.text}`)
@@ -149,7 +158,7 @@ export default function App() {
           ) : (
             <Debate
               topic={topic} rounds={rounds} grouped={grouped} partial={partial}
-              phase={phase} errorMsg={errorMsg} onCopy={copyAll} onStop={stop}
+              phase={phase} errorMsg={errorMsg} onCopy={copyAll} onStop={stop} onNew={newDebate}
             />
           )}
         </div>
@@ -205,7 +214,7 @@ function Setup({ topic, setTopic, rounds, setRounds, login, ready, onStart }) {
   );
 }
 
-function Debate({ topic, rounds, grouped, partial, phase, errorMsg, onCopy, onStop }) {
+function Debate({ topic, rounds, grouped, partial, phase, errorMsg, onCopy, onStop, onNew }) {
   const done = grouped.reduce((n, g) => n + g.turns.length, 0);
   const pct = Math.min(100, Math.round((done / (rounds * 2)) * 100));
   return (
@@ -214,7 +223,9 @@ function Debate({ topic, rounds, grouped, partial, phase, errorMsg, onCopy, onSt
         <div className="topic">{topic}</div>
         <div className="progress"><div className="bar"><i style={{ width: pct + "%" }} /></div>第 {Math.min(rounds, Math.ceil(done / 2) || 1)} / {rounds} 回合</div>
         <button className="btn-ghost" onClick={onCopy}>复制全文</button>
-        {phase === "running" && <button className="btn-stop" onClick={onStop}>停止</button>}
+        {phase === "running"
+          ? <button className="btn-stop" onClick={onStop}>停止</button>
+          : <button className="btn-primary" onClick={onNew}>＋ 新建辩论</button>}
       </div>
 
       {grouped.map((g) => (
