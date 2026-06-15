@@ -78,15 +78,16 @@ export default function App() {
       { topic, rounds, lang: /[一-鿿]/.test(topic) ? "zh" : "en" },
       { pro, con },
       {
-        onTurnStart: ({ round, stance }) => setPartial({ round, stance, text: "" }),
+        onTurnStart: ({ round, stance }) => { console.log("[debate] turnStart", round, stance); setPartial({ round, stance, text: "" }); },
         onChunk: ({ round, stance, partial }) => setPartial({ round, stance, text: partial }),
         onTurn: ({ round, stance, text }) => {
+          console.log("[debate] turn done", round, stance, "len", text.length);
           setRecord((r) => [...r, { round, stance, text }]);
           setPartial(null);
         },
-        onComplete: () => { setPhase("done"); setPartial(null); },
-        onAbnormal: (e) => { setErrorMsg("检测到异常（" + e.reason + "），辩论已暂停，请重新登录或重试。"); setPhase("paused"); setPartial(null); },
-        onError: (e) => { setErrorMsg("出错：" + e.message); setPhase("paused"); setPartial(null); },
+        onComplete: () => { console.log("[debate] complete"); setPhase("done"); setPartial(null); },
+        onAbnormal: (e) => { console.log("[debate] abnormal", e.reason); setErrorMsg("检测到异常（" + e.reason + "），辩论已暂停，请重新登录或重试。"); setPhase("paused"); setPartial(null); },
+        onError: (e) => { console.log("[debate] error", e.message); setErrorMsg("出错：" + e.message); setPhase("paused"); setPartial(null); },
       },
       { signal: ctrl.signal, turnTimeoutMs: 200000 }
     );
@@ -186,9 +187,9 @@ function Setup({ topic, setTopic, rounds, setRounds, login, ready, onStart }) {
         <div className="rounds-card">
           <div className="lbl">回合数</div>
           <div className="stepper">
-            <button onClick={() => setRounds((r) => Math.max(2, r - 1))}>−</button>
+            <button onClick={() => setRounds((r) => Math.max(3, r - 1))}>−</button>
             <div className="n">{rounds}</div>
-            <button onClick={() => setRounds((r) => Math.min(8, r + 1))}>+</button>
+            <button onClick={() => setRounds((r) => Math.min(10, r + 1))}>+</button>
           </div>
           <div className="unit">回合</div>
         </div>
