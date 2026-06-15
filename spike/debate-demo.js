@@ -25,6 +25,17 @@ function createWindow() {
     if (/__DEMO__|error|Error/i.test(String(msg))) log(`[page] ${msg}`);
   });
   log("[event] demo window created");
+
+  // 触发文件：外部 touch spike/debate-go.txt 即点击「开始辩论」（便于无人值守复测）
+  const GO = path.join(__dirname, "debate-go.txt");
+  try { if (fs.existsSync(GO)) fs.unlinkSync(GO); } catch (e) {}
+  setInterval(() => {
+    if (fs.existsSync(GO)) {
+      try { fs.unlinkSync(GO); } catch (e) {}
+      log("[event] GO trigger -> click start");
+      win.webContents.executeJavaScript("var b=document.getElementById('start'); b && !b.disabled && b.click(); b?b.disabled:'no-btn'").then((r) => log("[event] start clicked, disabledNow=" + r)).catch((e) => log("[error] go " + e.message));
+    }
+  }, 1500);
 }
 
 app.whenReady().then(createWindow);

@@ -30,15 +30,21 @@ function makeParticipant(wv, label) {
       await exec(injectCode(prompt));
       // 等新的 assistant 节点出现
       for (let i = 0; i < 24; i++) { await sleep(700); if ((await exec(COUNT)) > before) break; }
+      // 关键修复：先等"生成真正开始"(停止按钮出现)，避免注入后立刻误判完成
+      let started = false;
+      for (let i = 0; i < 16; i++) { await sleep(500); if (await exec(STOP)) { started = true; break; } }
       // 轮询直到停止生成(无 .send-button-container.stop)且文本稳定
       let last = "", stable = 0;
-      for (let i = 0; i < 90; i++) {
+      for (let i = 0; i < 150; i++) {
         await sleep(800);
         const gen = await exec(STOP);
         const a = await exec(ANSWER);
         if (a && a !== last) { last = a; stable = 0; if (onChunk) onChunk(a); }
         else if (a === last && a) { stable++; }
-        if (!gen && last.length > 0 && stable >= 2) { D(label, "done len", last.length); return last; }
+        // 见过生成开始：无停止按钮 + 稳定2拍即完成
+        if (started && !gen && last.length > 0 && stable >= 2) { D(label, "done len", last.length); return last; }
+        // 没见过生成开始(回答极快/极短)：用更强的稳定阈值兜底
+        if (!started && !gen && last.length > 0 && stable >= 5) { D(label, "done(fast) len", last.length); return last; }
       }
       D(label, "timeout len", last.length);
       return last;
