@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { ADAPTERS, ADAPTER_LIST } from "./adapters.js";
 import { makeParticipant } from "./webviewParticipant.js";
 import { runDebate, Stance } from "../debate/orchestrator.js";
+import iconUrl from "./icon.png";
 
 const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
@@ -153,7 +154,7 @@ export default function App() {
   return (
     <div className="app">
       <div className="topbar">
-        <div className="brand"><Logo />AI 辩论台</div>
+        <div className="brand"><img className="logo-img" src={iconUrl} alt="" />AI 辩论台</div>
         <div className="tabs">
           <div className={"tab" + (tab === "chat" ? " on" : "")} onClick={() => setTab("chat")}>💬 对话</div>
           <div className={"tab" + (tab === "pro" ? " on" : "")} onClick={() => setTab("pro")}>
@@ -200,16 +201,6 @@ export default function App() {
         </div>
       </div>
     </div>
-  );
-}
-
-function Logo() {
-  // 两个对望的对话气泡：正方(紫) + 反方(蓝)，寓意双 AI 辩论
-  return (
-    <svg className="logo-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M2.5 5.2c0-.94.76-1.7 1.7-1.7h7.3c.94 0 1.7.76 1.7 1.7v4.9c0 .94-.76 1.7-1.7 1.7H6.6L3.4 14.4c-.3.24-.74.03-.74-.36v-1.84c-.36-.27-.16-.06-.16-.06V5.2Z" fill="#7C5CFF"/>
-      <path d="M21.5 9.9c0-.94-.76-1.7-1.7-1.7h-7.3c-.94 0-1.7.76-1.7 1.7v4.9c0 .94.76 1.7 1.7 1.7h5.4l2.5 2.6c.3.31.81.1.81-.33v-1.94c.2-.15.29-.46.29-.79V9.9Z" fill="#2E8BFF"/>
-    </svg>
   );
 }
 

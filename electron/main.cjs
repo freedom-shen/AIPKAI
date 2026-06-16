@@ -10,6 +10,7 @@ function createWindow() {
     minWidth: 1040,
     minHeight: 680,
     backgroundColor: "#EFEEF3",
+    icon: path.join(__dirname, "..", "build", "icon.png"),
     titleBarStyle: "hiddenInset",
     webPreferences: {
       webviewTag: true, // 允许 <webview> 嵌入真实 AI 网页

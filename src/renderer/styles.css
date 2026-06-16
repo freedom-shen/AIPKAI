@@ -34,7 +34,8 @@ body {
   border-bottom: 1px solid var(--line); -webkit-app-region: drag;
 }
 .brand { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; color: var(--muted); margin-right: 14px; -webkit-app-region: drag; }
-.brand .logo-svg { display: block; flex: none; opacity: 1; }
+.brand .logo-svg { display: block; flex: none; }
+.brand .logo-img { width: 17px; height: 17px; border-radius: 5px; display: block; flex: none; }
 .tabs { display: flex; gap: 4px; -webkit-app-region: no-drag; }
 .tab {
   display: flex; align-items: center; gap: 7px; padding: 6px 13px; border-radius: 9px;
