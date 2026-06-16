@@ -267,14 +267,9 @@ function Debate({ topic, rounds, record, models, partial, phase, errorMsg, onExp
         <div className="topic">{topic}</div>
         <div className="progress"><div className="bar"><i style={{ width: pct + "%" }} /></div>第 {Math.min(rounds, Math.ceil(done / 2) || 1)} / {rounds} 回合</div>
         <button className="btn-ghost" onClick={() => onExport(record)}>导出</button>
-        {phase === "running" ? (
-          <button className="btn-stop" onClick={onStop}>停止</button>
-        ) : (
-          <>
-            {onContinue && <button className="btn-ghost" onClick={onContinue}>继续辩论 +3</button>}
-            <button className="btn-primary" onClick={onNew}>＋ 新建辩论</button>
-          </>
-        )}
+        {phase === "running"
+          ? <button className="btn-stop" onClick={onStop}>停止</button>
+          : <button className="btn-primary" onClick={onNew}>＋ 新建辩论</button>}
       </div>
 
       {grouped.map((g) => (
@@ -291,6 +286,9 @@ function Debate({ topic, rounds, record, models, partial, phase, errorMsg, onExp
       )}
 
       {phase === "done" && <div className="end-tag">— 辩论结束 · 共 {rounds} 回合 —</div>}
+      {phase === "done" && onContinue && (
+        <div className="continue-row"><button className="btn-primary lg" onClick={onContinue}>继续辩论 · +3 回合</button></div>
+      )}
       {phase === "paused" && errorMsg && <div className="err-tag">{errorMsg}</div>}
     </div>
   );
