@@ -38,9 +38,12 @@ An Electron desktop app:
 - 🖥️ Pure desktop; login sessions stay local
 - 🧱 Built with Electron from scratch (the approach was informed by studying [ChatALL](https://github.com/ai-shifu/ChatALL))
 
-## Status
+## Download
 
-🚧 **Work in progress.** Done: overall design, debate engine (with unit tests), and core feasibility validation (two AIs auto-debating proven on real web pages). In progress: production adapters and UI. See [`docs/PROGRESS.md`](docs/PROGRESS.md).
+**v1.0.0** (macOS · Apple Silicon/arm64): see [Releases](https://github.com/freedom-shen/AIPKAI/releases).
+Unsigned — on first launch, **right-click → Open** to bypass Gatekeeper. Windows build pending CI.
+
+Progress: [`docs/PROGRESS.md`](docs/PROGRESS.md).
 
 ## Tech stack
 
@@ -59,8 +62,11 @@ npm install
 # Run the debate-engine unit tests
 npm test
 
-# Try the current prototype (two AIs debating)
-npm run demo
+# Dev mode (Vite + Electron)
+npm run dev
+
+# Package macOS dmg (-> dist_electron/)
+npm run dist
 ```
 
 ## Reference

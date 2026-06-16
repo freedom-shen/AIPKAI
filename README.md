@@ -1,6 +1,8 @@
 <div align="center">
 
-# ⚔️ AI 辩论台 · AI Debate Arena
+<img src="build/icon.png" width="112" alt="AI 辩论台" />
+
+# AI 辩论台 · AI Debate Arena
 
 **输入一个话题，让两个 AI 自动展开正反辩论的桌面应用。**
 
@@ -32,15 +34,20 @@
 
 ## 特性
 
-- 🗣️ 选两个 AI（可同款），输入话题即开始正反辩论
-- 🧩 自动分配正/反立场，固定回合后结束
-- 🌐 跟随话题语言自动生成中/英文提示词
-- 🖥️ 纯桌面端，登录态保存在本地
-- 🧱 基于 Electron 自研实现（调研阶段参考过 [ChatALL](https://github.com/ai-shifu/ChatALL) 的思路）
+- 🗣️ 支持 **Kimi、DeepSeek**（可同款对辩，也可跨模型 Kimi × DeepSeek）
+- 🧩 自动分配正 / 反立场，**3–10 回合**可调，辩满自动收尾
+- ⚡ 流式实时显示；DeepSeek 自动**排除"深度思考"链**，只取最终答案
+- 🔁 **继续辩论 +3**（接续原对话）、📤 **导出 Markdown**、🗂️ 本地**历史记录**
+- 🔐 登录检测与门控；同模型同账号**登录一次**两侧通用
+- 🌐 跟随话题语言自动生成中 / 英文提示词
+- 🖥️ 纯桌面端、登录态本地保存；基于 Electron 自研（调研阶段参考过 [ChatALL](https://github.com/ai-shifu/ChatALL)）
 
-## 项目状态
+## 下载
 
-🚧 **开发中。** 已完成：整体设计、辩论引擎（含单元测试）、核心可行性验证（已在真实网页上跑通"两个 AI 自动辩论"）。进行中：正式适配器与界面。详见 [`docs/PROGRESS.md`](docs/PROGRESS.md)。
+**v1.0.0**（macOS · Apple Silicon/arm64）：见 [Releases](https://github.com/freedom-shen/AIPKAI/releases)。
+未签名，首次打开请**右键 →「打开」**绕过 Gatekeeper。Windows 版待 CI 构建。
+
+进展详见 [`docs/PROGRESS.md`](docs/PROGRESS.md)。
 
 ## 技术栈
 
@@ -59,8 +66,11 @@ npm install
 # 运行单元测试（辩论引擎）
 npm test
 
-# 体验当前原型（两个 AI 辩论 demo）
-npm run demo
+# 开发模式启动应用（Vite + Electron）
+npm run dev
+
+# 打包 macOS 安装包（dmg → dist_electron/）
+npm run dist
 ```
 
 ## 参考
