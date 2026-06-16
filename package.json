@@ -4,6 +4,7 @@
   "description": "让两个 AI 自动展开正反辩论的桌面应用",
   "license": "MIT",
   "private": true,
+  "repository": "https://github.com/freedom-shen/AIPKAI",
   "main": "electron/main.cjs",
   "scripts": {
     "test": "vitest run",
@@ -39,6 +40,8 @@
       "target": "dmg",
       "category": "public.app-category.productivity",
       "identity": null
-    }
+    },
+    "win": { "target": "nsis" },
+    "publish": { "provider": "github", "owner": "freedom-shen", "repo": "AIPKAI", "releaseType": "release" }
   }
 }

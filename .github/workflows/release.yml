@@ -1,0 +1,37 @@
+name: Release
+
+# 推送 v* tag 时触发：在 macOS + Windows 上构建并发布到对应 GitHub Release
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build renderer (Vite)
+        run: npm run build
+
+      - name: Build app & publish to Release (electron-builder)
+        # 不带平台参数 → 按当前 runner 自动构建：macOS=dmg，Windows=nsis(.exe)
+        run: npx electron-builder --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
