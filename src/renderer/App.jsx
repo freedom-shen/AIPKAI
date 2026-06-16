@@ -295,6 +295,26 @@ function Debate({ topic, rounds, record, models, partial, phase, errorMsg, onExp
   );
 }
 
+// 打字机：无论底层逐字还是整段返回，显示时都按字逐渐展开
+function Typewriter({ text }) {
+  const [n, setN] = useState(0);
+  const cur = useRef(0);
+  useEffect(() => {
+    if (cur.current > text.length) cur.current = 0; // 新一轮重置
+    let timer;
+    const step = () => {
+      if (cur.current < text.length) {
+        cur.current = Math.min(text.length, cur.current + Math.max(1, Math.ceil((text.length - cur.current) / 28)));
+        setN(cur.current);
+        timer = setTimeout(step, 18);
+      }
+    };
+    step();
+    return () => clearTimeout(timer);
+  }, [text]);
+  return text.slice(0, Math.min(n, text.length));
+}
+
 function Turn({ stance, text, models, streaming }) {
   const pro = stance === Stance.PRO;
   const m = pro ? models.pro : models.con;
@@ -303,7 +323,13 @@ function Turn({ stance, text, models, streaming }) {
       <div className={"avatar " + (pro ? "pro" : "con")}>{m.badge}</div>
       <div className="body">
         <div className="who">{m.label} · {pro ? "正方" : "反方"}</div>
-        <div className="bubble">{text || (streaming ? <span className="typing"><i /><i /><i /></span> : "")}{streaming && text ? <span className="typing"><i /><i /><i /></span> : null}</div>
+        <div className="bubble">
+          {streaming
+            ? (text
+                ? <><Typewriter text={text} /><span className="typing"><i /><i /><i /></span></>
+                : <span className="typing"><i /><i /><i /></span>)
+            : text}
+        </div>
       </div>
     </div>
   );
