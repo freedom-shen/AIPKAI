@@ -44,6 +44,9 @@ app.whenReady().then(() => {
       await sleep(5000);
       log("点击后 answers:", await exec(COUNT).catch(() => "?"), "| ANSWER:", await exec(ANSWER).catch(() => ""));
     }
+    // 完整结构：候选答案/思考容器（找快速模式答案类名）
+    const TREE = `(()=>{const re=/markdown|message|ds-|content|think|reason/i;const els=[...document.querySelectorAll('div,article,section')].filter(e=>re.test((e.className||'').toString()));const list=els.map(e=>({cls:(e.className||'').toString().slice(0,55),len:(e.innerText||'').trim().length,head:(e.innerText||'').trim().slice(0,30)})).filter(x=>x.len>0);return JSON.stringify(list.slice(-22));})()`;
+    log("TREE:", await exec(TREE).catch(e => "ERR " + e.message));
     log("=== end ===");
     busy = false;
   }, 1500);

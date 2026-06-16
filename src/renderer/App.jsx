@@ -167,7 +167,7 @@ export default function App() {
       </div>
 
       <div className="stage">
-        <div className={"chat-layout " + (tab === "chat" ? "" : "hidden")}>
+        <div className={"chat-layout" + (tab === "chat" ? "" : " off")}>
           <aside className="sidebar">
             <button className="side-new" onClick={newDebate} disabled={phase === "running"} title={phase === "running" ? "辩论进行中" : ""}>＋ 新建辩论</button>
             <div className="hist">
@@ -192,10 +192,10 @@ export default function App() {
             )}
           </div>
         </div>
-        <div className={"webview-host " + (tab === "pro" ? "" : "hidden")}>
+        <div className={"webview-host " + (tab === "pro" ? "on" : "off")}>
           <webview key={proId} ref={proRef} className="wv" src={proA.url} partition={proPartition} useragent={UA} allowpopups="true" webpreferences="backgroundThrottling=false" />
         </div>
-        <div className={"webview-host " + (tab === "con" ? "" : "hidden")}>
+        <div className={"webview-host " + (tab === "con" ? "on" : "off")}>
           <webview key={conId} ref={conRef} className="wv" src={conA.url} partition={conPartition} useragent={UA} allowpopups="true" webpreferences="backgroundThrottling=false" />
         </div>
       </div>

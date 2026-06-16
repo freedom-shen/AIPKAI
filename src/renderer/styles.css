@@ -51,11 +51,15 @@ body {
 .status .dot { width: 8px; height: 8px; }
 
 /* ── 主舞台 ── */
-.stage { flex: 1; min-height: 0; overflow: hidden; }
-.webview-host { height: 100%; }
+.stage { flex: 1; min-height: 0; overflow: hidden; position: relative; }
+/* 三个面板叠放：非激活的 webview 移到屏幕外但保持尺寸与渲染（DeepSeek 虚拟列表需要视口才会渲染 DOM） */
+.chat-layout { position: absolute; inset: 0; display: flex; }
+.chat-layout.off { display: none; }
+.webview-host { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.webview-host.on { z-index: 2; }
+.webview-host.off { transform: translateX(-200vw); z-index: 0; }
 
 /* 对话布局：左历史 + 右主区 */
-.chat-layout { display: flex; height: 100%; }
 .sidebar { width: 248px; flex: none; border-right: 1px solid var(--line); background: rgba(255,255,255,.55); display: flex; flex-direction: column; padding: 14px 12px; gap: 12px; overflow-y: auto; }
 .side-new { border: none; border-radius: 12px; padding: 11px; font-size: 14px; font-weight: 600; color: #fff; cursor: pointer; background: linear-gradient(135deg, var(--pro), var(--con)); box-shadow: 0 8px 18px -10px rgba(92,76,255,.5); }
 .side-new:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
