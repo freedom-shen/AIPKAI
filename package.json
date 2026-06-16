@@ -1,6 +1,6 @@
 {
   "name": "ai-debate-arena",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "让两个 AI 自动展开正反辩论的桌面应用",
   "license": "MIT",
   "private": true,
@@ -11,6 +11,7 @@
     "dev:vite": "vite",
     "dev": "concurrently -k \"vite\" \"wait-on tcp:5173 && electron .\"",
     "build": "vite build",
+    "dist": "vite build && electron-builder --mac",
     "start": "electron .",
     "demo": "electron spike/debate-demo.js",
     "probe": "electron spike/probe-main.js"
@@ -19,6 +20,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "concurrently": "^9.1.0",
     "electron": "^33.4.11",
+    "electron-builder": "^25.1.8",
     "vite": "^6.0.7",
     "vitest": "^4.1.9",
     "wait-on": "^8.0.1"
@@ -26,5 +28,17 @@
   "dependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
+  },
+  "build": {
+    "appId": "com.freedomshen.aidebate",
+    "productName": "AI Debate Arena",
+    "icon": "build/icon.png",
+    "directories": { "output": "dist_electron" },
+    "files": ["electron/**", "dist-renderer/**", "package.json"],
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.productivity",
+      "identity": null
+    }
   }
 }
