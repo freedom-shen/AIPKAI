@@ -64,20 +64,27 @@ export async function runDebate(config, participants, hooks = {}, options = {}) 
   };
   const aborted = () => signal?.aborted;
 
+  // options.resume = { last, startRound }：续辩——不新建对话、不开场，从上一句继续若干轮
+  const resume = options.resume;
+
   try {
     if (aborted()) return;
-    await pro.newChat();
-    await con.newChat();
+    if (!resume) {
+      await pro.newChat();
+      await con.newChat();
+    }
 
-    let last = "";
-    for (let round = 1; round <= rounds; round++) {
+    let last = resume ? resume.last : "";
+    const baseRound = resume ? resume.startRound : 1;
+    for (let r = 0; r < rounds; r++) {
+      const round = baseRound + r;
       for (const stance of [Stance.PRO, Stance.CON]) {
         if (aborted()) return;
         const who = stance === Stance.PRO ? pro : con;
         let prompt;
-        if (round === 1 && stance === Stance.PRO)
+        if (!resume && r === 0 && stance === Stance.PRO)
           prompt = buildProOpening(topic, lang);
-        else if (round === 1 && stance === Stance.CON)
+        else if (!resume && r === 0 && stance === Stance.CON)
           prompt = buildConOpening(topic, last, lang);
         else prompt = buildRebuttal(last, lang);
 

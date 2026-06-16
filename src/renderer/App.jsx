@@ -24,10 +24,12 @@ export default function App() {
   });
   const [viewingId, setViewingId] = useState(null);
 
+  const [runRounds, setRunRounds] = useState(5); // 本场累计目标回合（含续辩）
   const proRef = useRef(null);
   const conRef = useRef(null);
   const abortRef = useRef(null);
   const reloadAt = useRef({ pro: 0, con: 0 });
+  const curIdRef = useRef(null); // 当前这场辩论的历史 id
 
   const proA = ADAPTERS[proId];
   const conA = ADAPTERS[conId];
@@ -71,18 +73,22 @@ export default function App() {
   const ready = login.pro === "ok" && login.con === "ok" && topic.trim().length > 0;
   const models = { pro: { label: proA.label, badge: proA.badge }, con: { label: conA.label, badge: conA.badge } };
 
-  async function start() {
-    if (!ready || phase === "running") return;
-    setErrorMsg(""); setRecord([]); setPartial(null); setViewingId(null);
+  // 统一的辩论执行：resume=null 为新开；resume={last,startRound} 为续辩
+  async function runSegment(resume) {
+    const segRounds = resume ? 3 : rounds;
+    const total = resume ? runRounds + 3 : rounds;
+    setRunRounds(total);
+    setErrorMsg(""); setPartial(null); setViewingId(null);
     setPhase("running"); setTab("chat");
+    if (!resume) { setRecord([]); curIdRef.current = String(Date.now()); }
     const ctrl = new AbortController();
     abortRef.current = ctrl;
-    const turns = [];
-    const startedTopic = topic, startedRounds = rounds, startedModels = models;
+    const startedTopic = topic, startedModels = models, id = curIdRef.current;
+    const turns = resume ? [...record] : [];
     const pro = makeParticipant(proRef.current, proA);
     const con = makeParticipant(conRef.current, conA);
     await runDebate(
-      { topic, rounds, lang: /[一-鿿]/.test(topic) ? "zh" : "en" },
+      { topic, rounds: segRounds, lang: /[一-鿿]/.test(topic) ? "zh" : "en" },
       { pro, con },
       {
         onTurnStart: ({ round, stance }) => { console.log("[debate] turnStart", round, stance); setPartial({ round, stance, text: "" }); },
@@ -96,14 +102,25 @@ export default function App() {
         onComplete: () => {
           console.log("[debate] complete");
           setPhase("done"); setPartial(null);
-          const entry = { id: String(Date.now()), topic: startedTopic, rounds: startedRounds, models: startedModels, record: turns.slice(), ts: Date.now() };
-          setHistory((h) => [entry, ...h].slice(0, 50));
+          const entry = { id, topic: startedTopic, rounds: total, models: startedModels, record: turns.slice(), ts: Date.now() };
+          setHistory((h) => [entry, ...h.filter((e) => e.id !== id)].slice(0, 50));
         },
         onAbnormal: (e) => { console.log("[debate] abnormal", e.reason); setErrorMsg("检测到异常（" + e.reason + "），辩论已暂停，请重新登录或重试。"); setPhase("paused"); setPartial(null); },
         onError: (e) => { console.log("[debate] error", e.message); setErrorMsg("出错：" + e.message); setPhase("paused"); setPartial(null); },
       },
-      { signal: ctrl.signal, turnTimeoutMs: 200000 }
+      resume
+        ? { signal: ctrl.signal, turnTimeoutMs: 200000, resume }
+        : { signal: ctrl.signal, turnTimeoutMs: 200000 }
     );
+  }
+
+  function start() { if (!ready || phase === "running") return; runSegment(null); }
+
+  function continueDebate() {
+    if (phase === "running" || !record.length) return;
+    const startRound = Math.max(...record.map((r) => r.round)) + 1;
+    const last = record[record.length - 1].text || "";
+    runSegment({ last, startRound });
   }
 
   function stop() { abortRef.current?.abort(); setPhase(record.length ? "done" : "setup"); setPartial(null); }
@@ -114,12 +131,21 @@ export default function App() {
     setRecord([]); setPartial(null); setErrorMsg(""); setViewingId(null); setPhase("setup"); setTab("chat");
   }
 
-  function copyRecord(rec, mdls) {
+  function exportRecord(rec, mdls, topicStr) {
     const m = mdls || models;
-    const text = (rec || [])
-      .map((t) => `【${t.stance === Stance.PRO ? "正方 " + m.pro.label : "反方 " + m.con.label}】\n${t.text}`)
-      .join("\n\n");
-    navigator.clipboard?.writeText(text);
+    const t0 = topicStr || topic;
+    const md =
+      `# AI 辩论台\n\n**辩题：${t0}**\n\n正方：${m.pro.label}（支持） · 反方：${m.con.label}（反对）\n\n---\n\n` +
+      (rec || [])
+        .map((t) => `### ${t.stance === Stance.PRO ? "正方 " + m.pro.label : "反方 " + m.con.label} · 第 ${t.round} 回合\n\n${t.text}`)
+        .join("\n\n") + "\n";
+    const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `辩论_${(t0 || "未命名").slice(0, 20)}.md`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   const viewingItem = viewingId ? history.find((h) => h.id === viewingId) : null;
@@ -156,13 +182,13 @@ export default function App() {
           </aside>
           <div className="main-pane">
             {viewingItem ? (
-              <Debate topic={viewingItem.topic} rounds={viewingItem.rounds} record={viewingItem.record} models={viewingItem.models || models} partial={null} phase="done" errorMsg="" onCopy={(r) => copyRecord(r, viewingItem.models)} onNew={newDebate} />
+              <Debate topic={viewingItem.topic} rounds={viewingItem.rounds} record={viewingItem.record} models={viewingItem.models || models} partial={null} phase="done" errorMsg="" onExport={(r) => exportRecord(r, viewingItem.models, viewingItem.topic)} onNew={newDebate} />
             ) : phase === "setup" ? (
               <Setup topic={topic} setTopic={setTopic} rounds={rounds} setRounds={setRounds}
                 proId={proId} setProId={setProId} conId={conId} setConId={setConId}
                 login={login} ready={ready} onStart={start} />
             ) : (
-              <Debate topic={topic} rounds={rounds} record={record} models={models} partial={partial} phase={phase} errorMsg={errorMsg} onCopy={copyRecord} onStop={stop} onNew={newDebate} />
+              <Debate topic={topic} rounds={runRounds} record={record} models={models} partial={partial} phase={phase} errorMsg={errorMsg} onExport={(r) => exportRecord(r, models, topic)} onStop={stop} onNew={newDebate} onContinue={continueDebate} />
             )}
           </div>
         </div>
@@ -226,7 +252,7 @@ function Setup({ topic, setTopic, rounds, setRounds, proId, setProId, conId, set
   );
 }
 
-function Debate({ topic, rounds, record, models, partial, phase, errorMsg, onCopy, onStop, onNew }) {
+function Debate({ topic, rounds, record, models, partial, phase, errorMsg, onExport, onStop, onNew, onContinue }) {
   const grouped = [];
   for (const t of record || []) {
     let g = grouped.find((x) => x.round === t.round);
@@ -240,10 +266,15 @@ function Debate({ topic, rounds, record, models, partial, phase, errorMsg, onCop
       <div className="debate-head">
         <div className="topic">{topic}</div>
         <div className="progress"><div className="bar"><i style={{ width: pct + "%" }} /></div>第 {Math.min(rounds, Math.ceil(done / 2) || 1)} / {rounds} 回合</div>
-        <button className="btn-ghost" onClick={() => onCopy(record)}>复制全文</button>
-        {phase === "running"
-          ? <button className="btn-stop" onClick={onStop}>停止</button>
-          : <button className="btn-primary" onClick={onNew}>＋ 新建辩论</button>}
+        <button className="btn-ghost" onClick={() => onExport(record)}>导出</button>
+        {phase === "running" ? (
+          <button className="btn-stop" onClick={onStop}>停止</button>
+        ) : (
+          <>
+            {onContinue && <button className="btn-ghost" onClick={onContinue}>继续辩论 +3</button>}
+            <button className="btn-primary" onClick={onNew}>＋ 新建辩论</button>
+          </>
+        )}
       </div>
 
       {grouped.map((g) => (
