@@ -35,8 +35,10 @@ export default function App() {
   const proA = ADAPTERS[proId];
   const conA = ADAPTERS[conId];
   const sameModel = proId === conId;
-  const proPartition = "persist:" + proId;
-  const conPartition = sameModel ? proPartition : "persist:" + conId;
+  // 仅当同模型且该模型"跨标签会话独立"(sharePartition)时共享分区(登录一次)；否则两侧各自独立分区(避免会话同步串台)
+  const shared = sameModel && !!proA.sharePartition;
+  const proPartition = "persist:" + proId + "-a";
+  const conPartition = shared ? proPartition : "persist:" + conId + "-b";
 
   // 轮询登录态（按各自适配器的信号）
   useEffect(() => {
@@ -58,8 +60,8 @@ export default function App() {
       const [p, c] = await Promise.all([check(proRef, "pro", proA), check(conRef, "con", conA)]);
       if (!alive) return;
       setLogin({ pro: p, con: c });
-      // 同一模型（共享分区）：一侧登录后自动刷新另一侧同步登录态
-      if (sameModel) {
+      // 仅共享分区时：一侧登录后自动刷新另一侧同步登录态(独立分区则各自登录，不联动)
+      if (shared) {
         if (p === "ok" && c === "no") maybeReload(conRef, "con");
         else if (c === "ok" && p === "no") maybeReload(proRef, "pro");
       }
@@ -67,7 +69,7 @@ export default function App() {
     const id = setInterval(tick, 2500);
     tick();
     return () => { alive = false; clearInterval(id); };
-  }, [proId, conId, sameModel]);
+  }, [proId, conId, shared]);
 
   useEffect(() => { try { localStorage.setItem("debate-history", JSON.stringify(history)); } catch {} }, [history]);
 
@@ -194,10 +196,10 @@ export default function App() {
           </div>
         </div>
         <div className={"webview-host " + (tab === "pro" ? "on" : "off")}>
-          <webview key={proId} ref={proRef} className="wv" src={proA.url} partition={proPartition} useragent={UA} allowpopups="true" webpreferences="backgroundThrottling=false" />
+          <webview key={proPartition} ref={proRef} className="wv" src={proA.url} partition={proPartition} useragent={UA} allowpopups="true" webpreferences="backgroundThrottling=false" />
         </div>
         <div className={"webview-host " + (tab === "con" ? "on" : "off")}>
-          <webview key={conId} ref={conRef} className="wv" src={conA.url} partition={conPartition} useragent={UA} allowpopups="true" webpreferences="backgroundThrottling=false" />
+          <webview key={conPartition} ref={conRef} className="wv" src={conA.url} partition={conPartition} useragent={UA} allowpopups="true" webpreferences="backgroundThrottling=false" />
         </div>
       </div>
     </div>

@@ -6,6 +6,8 @@ export const kimi = {
   label: "Kimi",
   url: "https://www.kimi.com",
   badge: "K",
+  // Kimi 同一账号在两个标签是独立会话 → 同模型可共享分区(登录一次)。豆包/DeepSeek 会跨标签同步会话，需各自独立分区
+  sharePartition: true,
   // —— 注入页面上下文执行的代码串 ——
   // 未登录时也有输入框(.chat-input-editor)，故以"无登录按钮"判定已登录
   LOGGEDIN: `!([...document.querySelectorAll('button,[role=button],a,span,div')].some(e=>{const t=((e.innerText)||'').trim();return t==='登录'||t==='登 录'||t==='立即登录'}))`,
