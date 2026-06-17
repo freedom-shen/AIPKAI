@@ -1,6 +1,6 @@
 {
   "name": "ai-debate-arena",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "让两个 AI 自动展开正反辩论的桌面应用",
   "license": "MIT",
   "private": true,
