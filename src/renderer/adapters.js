@@ -48,10 +48,10 @@ export const doubao = {
   badge: "豆",
   // 实测：未登录时也有 textarea，但存在"登录"按钮；以"无登录按钮"判定已登录
   LOGGEDIN: `!([...document.querySelectorAll('button,[role=button],a,span,div')].some(e=>{const t=((e.innerText)||'').trim();return t==='登录'||t==='登录/注册'||t==='立即登录'}))`,
-  // 每条消息容器：[class*=content-max-width]；用户消息含 rounded-s-radius 气泡，助手不含
-  COUNT: `document.querySelectorAll('[class*="content-max-width"]').length`,
-  // 取最后一个"非用户"消息容器，减去思考块(thinking-box-root)文本 = 干净答案(快速/专家模式通用)
-  ANSWER: `(()=>{const ws=[...document.querySelectorAll('[class*="content-max-width"]')];for(let i=ws.length-1;i>=0;i--){const w=ws[i];if(w.querySelector('[class*=rounded-s-radius]'))continue;const tb=w.querySelector('[class*=thinking-box-root]');let t=((w.innerText)||'').trim();if(tb)t=t.replace(((tb.innerText)||'').trim(),'').trim();if(t)return t;}return '';})()`,
+  // 消息容器：同时含 mx-auto + content-max-width（排除 max-w-[var(--content-max-width)] 的模式工具栏）
+  COUNT: `document.querySelectorAll('[class*="content-max-width"][class*="mx-auto"]').length`,
+  // 取最后一个"非空"消息容器(即最新回答；用户问后、答案出现前会短暂为问句，流式稳定后即答案)，减去思考块文本
+  ANSWER: `(()=>{const ws=[...document.querySelectorAll('[class*="content-max-width"][class*="mx-auto"]')].filter(w=>((w.innerText)||'').trim().length>0);const w=ws[ws.length-1];if(!w)return '';const tb=w.querySelector('[class*=thinking-box-root]');let t=((w.innerText)||'').trim();if(tb)t=t.replace(((tb.innerText)||'').trim(),'').trim();return t;})()`,
   // 停止按钮为图标、类名不稳定；置 false 退化为文本稳定判完成(答案出现前为空，不会误判)
   STOP: `false`,
   NEWCHAT: `(()=>{const e=[...document.querySelectorAll('div,button,span,a')].find(x=>{const t=(x.textContent||'').trim();return t==='新对话'||t==='开启新对话'||t==='新建对话'});if(e){e.click();return true}return false})()`,

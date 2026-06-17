@@ -38,9 +38,8 @@ app.whenReady().then(() => {
     const TESTIDS = `JSON.stringify([...document.querySelectorAll('[data-testid]')].map(e=>({t:e.getAttribute('data-testid'),len:(e.innerText||'').trim().length,head:(e.innerText||'').trim().slice(0,28)})).filter(x=>x.len>3).slice(-16))`;
     const ANSTEST = `(()=>{const tb=[...document.querySelectorAll('[class*=thinking-box-root]')].pop();const md=[...document.querySelectorAll('[class*=markdown],[class*=message-content],[class*=msg-content]')].pop();let out={hasThinkBox:!!tb};if(tb){let msg=tb;for(let i=0;i<7&&msg.parentElement;i++){msg=msg.parentElement;if(/message/i.test(msg.className||''))break;}const full=(msg.innerText||'').trim();const think=(tb.innerText||'').trim();out.thinkHead=think.slice(0,36);out.ansByMinus=full.replace(think,'').trim().slice(0,70);out.nextSib=(tb.nextElementSibling&&(tb.nextElementSibling.innerText||'').trim().slice(0,60))||'(none)';}if(md){out.mdCls=(md.className||'').toString().slice(0,50);out.mdHead=(md.innerText||'').trim().slice(0,60);}return JSON.stringify(out);})()`;
     const MSGS = `JSON.stringify([...document.querySelectorAll('[class*=message]')].filter(e=>!/message-list/i.test(e.className||'')&&(e.innerText||'').trim().length>2).slice(-7).map(e=>({cls:(e.className||'').toString().slice(0,50),think:!!e.querySelector('[class*=thinking-box-root]'),head:(e.innerText||'').trim().slice(0,22)})))`;
-    log("TESTIDS:", await exec(TESTIDS).catch(e => "ERR " + e.message));
-    log("ANSTEST:", await exec(ANSTEST).catch(e => "ERR " + e.message));
-    log("MSGS:", await exec(MSGS).catch(e => "ERR " + e.message));
+    const WRAPS = `JSON.stringify([...document.querySelectorAll('[class*="content-max-width"]')].map((w,i)=>({i,user:!!w.querySelector('[class*=rounded-s-radius]'),think:!!w.querySelector('[class*=thinking-box-root]'),len:((w.innerText)||'').trim().length,head:((w.innerText)||'').trim().slice(0,28),cls:(w.className||'').toString().slice(0,40)})))`;
+    log("WRAPS:", await exec(WRAPS).catch(e => "ERR " + e.message));
     log("=== end ===");
     busy = false;
   }, 1500);
