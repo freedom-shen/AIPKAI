@@ -51,8 +51,8 @@ export const doubao = {
   LOGGEDIN: `!([...document.querySelectorAll('button,[role=button],a,span,div')].some(e=>{const t=((e.innerText)||'').trim();return t==='登录'||t==='登录/注册'||t==='立即登录'}))`,
   // 关键：限定在消息列表 [class*=message-list] 内找答案，排除输入区的模式工具栏(在列表之外)
   COUNT: `(()=>{const l=document.querySelector('[class*="message-list"]');return l?l.querySelectorAll('[class*="content-max-width"][class*="mx-auto"]').length:0;})()`,
-  // 取消息列表内最后一个"非空"容器(最新回答)，减去思考块文本(快速/专家模式通用)
-  ANSWER: `(()=>{const l=document.querySelector('[class*="message-list"]');if(!l)return '';const ws=[...l.querySelectorAll('[class*="content-max-width"][class*="mx-auto"]')].filter(w=>((w.innerText)||'').trim().length>0);const w=ws[ws.length-1];if(!w)return '';const tb=w.querySelector('[class*=thinking-box-root]');let t=((w.innerText)||'').trim();if(tb)t=t.replace(((tb.innerText)||'').trim(),'').trim();return t;})()`,
+  // 取消息列表内最后一个"非空"容器(最新回答)，克隆后删掉 思考块 + 可点击的建议追问/链接，再去掉联网搜索状态行
+  ANSWER: `(()=>{const l=document.querySelector('[class*="message-list"]');if(!l)return '';const ws=[...l.querySelectorAll('[class*="content-max-width"][class*="mx-auto"]')].filter(w=>((w.innerText)||'').trim().length>0);const w=ws[ws.length-1];if(!w)return '';const c=w.cloneNode(true);c.querySelectorAll('[class*=thinking-box-root],[class*=suggest],button,a,[role=button]').forEach(e=>e.remove());let t=((c.innerText)||'').trim();t=t.replace(/搜索\\s*\\d+\\s*个关键词[，,]\\s*参考\\s*\\d+\\s*篇资料/g,'').trim();return t;})()`,
   // 停止按钮为图标、类名不稳定；置 false 退化为文本稳定判完成(答案出现前为空，不会误判)
   STOP: `false`,
   NEWCHAT: `(()=>{const e=[...document.querySelectorAll('div,button,span,a')].find(x=>{const t=(x.textContent||'').trim();return t==='新对话'||t==='开启新对话'||t==='新建对话'});if(e){e.click();return true}return false})()`,

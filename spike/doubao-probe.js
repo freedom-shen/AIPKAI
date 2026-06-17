@@ -11,7 +11,7 @@ const log = (...a) => { const l = `[${new Date().toISOString()}] ${a.join(" ")}`
 try { fs.writeFileSync(LOG, "=== doubao-probe ===\n"); } catch {}
 try { if (fs.existsSync(GO)) fs.unlinkSync(GO); } catch {}
 
-const Q = "30岁的男人年入20万可耻吗？请有力论证你的观点，约200字。";
+const Q = "搜索一下中国30岁男性的平均收入是多少？请结合数据简要说明，约150字。";
 const INPUTS = `JSON.stringify([...document.querySelectorAll('textarea,[contenteditable="true"]')].map(e=>({tag:e.tagName,ce:e.getAttribute('contenteditable'),ph:e.getAttribute('placeholder')||e.getAttribute('data-placeholder')||'',id:e.id,cls:(e.className||'').toString().slice(0,45)})))`;
 const BUTTONS = `JSON.stringify([...document.querySelectorAll('button,[role=button]')].map(e=>{const r=e.getBoundingClientRect();return {txt:(e.innerText||'').trim().slice(0,10),aria:e.getAttribute('aria-label')||'',x:Math.round(r.x),y:Math.round(r.y),cls:(e.className||'').toString().slice(0,40)}}).filter(b=>b.txt||b.aria).slice(0,25))`;
 // 通用注入：textarea 用 setter+input；contenteditable 用 execCommand；再回车
@@ -38,8 +38,8 @@ app.whenReady().then(() => {
     const TESTIDS = `JSON.stringify([...document.querySelectorAll('[data-testid]')].map(e=>({t:e.getAttribute('data-testid'),len:(e.innerText||'').trim().length,head:(e.innerText||'').trim().slice(0,28)})).filter(x=>x.len>3).slice(-16))`;
     const ANSTEST = `(()=>{const tb=[...document.querySelectorAll('[class*=thinking-box-root]')].pop();const md=[...document.querySelectorAll('[class*=markdown],[class*=message-content],[class*=msg-content]')].pop();let out={hasThinkBox:!!tb};if(tb){let msg=tb;for(let i=0;i<7&&msg.parentElement;i++){msg=msg.parentElement;if(/message/i.test(msg.className||''))break;}const full=(msg.innerText||'').trim();const think=(tb.innerText||'').trim();out.thinkHead=think.slice(0,36);out.ansByMinus=full.replace(think,'').trim().slice(0,70);out.nextSib=(tb.nextElementSibling&&(tb.nextElementSibling.innerText||'').trim().slice(0,60))||'(none)';}if(md){out.mdCls=(md.className||'').toString().slice(0,50);out.mdHead=(md.innerText||'').trim().slice(0,60);}return JSON.stringify(out);})()`;
     const MSGS = `JSON.stringify([...document.querySelectorAll('[class*=message]')].filter(e=>!/message-list/i.test(e.className||'')&&(e.innerText||'').trim().length>2).slice(-7).map(e=>({cls:(e.className||'').toString().slice(0,50),think:!!e.querySelector('[class*=thinking-box-root]'),head:(e.innerText||'').trim().slice(0,22)})))`;
-    const NEWANS = `(()=>{const l=document.querySelector('[class*="message-list"]');if(!l)return JSON.stringify({list:false});const ws=[...l.querySelectorAll('[class*="content-max-width"][class*="mx-auto"]')].filter(w=>((w.innerText)||'').trim().length>0);const w=ws[ws.length-1];const t=w?((w.innerText)||'').trim():'';return JSON.stringify({list:true,wrapsInList:ws.length,ansLen:t.length,ansHead:t.slice(0,70)});})()`;
-    log("NEWANS:", await exec(NEWANS).catch(e => "ERR " + e.message));
+    const CHECK = `(()=>{const l=document.querySelector('[class*="message-list"]');const ws=[...l.querySelectorAll('[class*="content-max-width"][class*="mx-auto"]')].filter(w=>((w.innerText)||'').trim());const w=ws[ws.length-1];if(!w)return '(none)';const c=w.cloneNode(true);c.querySelectorAll('[class*=thinking-box-root],[class*=suggest],button,a,[role=button]').forEach(e=>e.remove());let t=((c.innerText)||'').trim();t=t.replace(/搜索\\s*\\d+\\s*个关键词[，,]\\s*参考\\s*\\d+\\s*篇资料/g,'').trim();return JSON.stringify({len:t.length,head:t.slice(0,42),tail:t.slice(-40)});})()`;
+    log("CHECK:", await exec(CHECK).catch(e => "ERR " + e.message));
     log("=== end ===");
     busy = false;
   }, 1500);
