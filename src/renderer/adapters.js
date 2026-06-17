@@ -46,8 +46,8 @@ export const doubao = {
   label: "豆包",
   url: "https://www.doubao.com/chat/",
   badge: "豆",
-  // 实测：登录后才有聊天 textarea(semi-input-textarea)
-  LOGGEDIN: `!!document.querySelector('textarea')`,
+  // 实测：未登录时也有 textarea，但存在"登录"按钮；以"无登录按钮"判定已登录
+  LOGGEDIN: `!([...document.querySelectorAll('button,[role=button],a,span,div')].some(e=>{const t=((e.innerText)||'').trim();return t==='登录'||t==='登录/注册'||t==='立即登录'}))`,
   // 每条消息容器：[class*=content-max-width]；用户消息含 rounded-s-radius 气泡，助手不含
   COUNT: `document.querySelectorAll('[class*="content-max-width"]').length`,
   // 取最后一个"非用户"消息容器，减去思考块(thinking-box-root)文本 = 干净答案(快速/专家模式通用)
