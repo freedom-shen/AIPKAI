@@ -7,7 +7,8 @@ export const kimi = {
   url: "https://www.kimi.com",
   badge: "K",
   // —— 注入页面上下文执行的代码串 ——
-  LOGGEDIN: `!!document.querySelector('.chat-input-editor')`,
+  // 未登录时也有输入框(.chat-input-editor)，故以"无登录按钮"判定已登录
+  LOGGEDIN: `!([...document.querySelectorAll('button,[role=button],a,span,div')].some(e=>{const t=((e.innerText)||'').trim();return t==='登录'||t==='登 录'||t==='立即登录'}))`,
   COUNT: `document.querySelectorAll('.chat-content-item-assistant').length`,
   // 取最新一条 assistant 的最终答案；排除"长思考"思考链块（think/thought/reason/cot/<details>）
   ANSWER: `(()=>{const it=document.querySelectorAll('.chat-content-item-assistant');const l=it[it.length-1];if(!l)return '';let mds=[...l.querySelectorAll('.markdown,.markdown-container')].filter(m=>!m.closest('[class*=think i],[class*=thought i],[class*=reason i],[class*=cot i],details'));if(!mds.length)mds=[...l.querySelectorAll('.markdown,.markdown-container')];const t=mds[mds.length-1]||l;return ((t.innerText)||'').trim();})()`,
