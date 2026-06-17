@@ -41,6 +41,27 @@ export const deepseek = {
   STRUCT: `(()=>{const ms=document.querySelectorAll('.ds-assistant-message-main-content');return JSON.stringify({answers:ms.length,think:!!document.querySelector('.ds-think-content'),last:(ms[ms.length-1]&&ms[ms.length-1].innerText||'').trim().slice(0,40)});})()`,
 };
 
+export const doubao = {
+  id: "doubao",
+  label: "豆包",
+  url: "https://www.doubao.com/chat/",
+  badge: "豆",
+  // 实测：登录后才有聊天 textarea(semi-input-textarea)
+  LOGGEDIN: `!!document.querySelector('textarea')`,
+  // 每条消息容器：[class*=content-max-width]；用户消息含 rounded-s-radius 气泡，助手不含
+  COUNT: `document.querySelectorAll('[class*="content-max-width"]').length`,
+  // 取最后一个"非用户"消息容器，减去思考块(thinking-box-root)文本 = 干净答案(快速/专家模式通用)
+  ANSWER: `(()=>{const ws=[...document.querySelectorAll('[class*="content-max-width"]')];for(let i=ws.length-1;i>=0;i--){const w=ws[i];if(w.querySelector('[class*=rounded-s-radius]'))continue;const tb=w.querySelector('[class*=thinking-box-root]');let t=((w.innerText)||'').trim();if(tb)t=t.replace(((tb.innerText)||'').trim(),'').trim();if(t)return t;}return '';})()`,
+  // 停止按钮为图标、类名不稳定；置 false 退化为文本稳定判完成(答案出现前为空，不会误判)
+  STOP: `false`,
+  NEWCHAT: `(()=>{const e=[...document.querySelectorAll('div,button,span,a')].find(x=>{const t=(x.textContent||'').trim();return t==='新对话'||t==='开启新对话'||t==='新建对话'});if(e){e.click();return true}return false})()`,
+  inject: (text) =>
+    `(()=>{const el=document.querySelector('textarea');if(!el)return false;el.focus();const set=Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype,'value').set;set.call(el,${JSON.stringify(
+      text
+    )});el.dispatchEvent(new Event('input',{bubbles:true}));setTimeout(()=>el.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',code:'Enter',keyCode:13,which:13,bubbles:true})),200);return true;})()`,
+  STRUCT: `(()=>{const ws=document.querySelectorAll('[class*="content-max-width"]');return JSON.stringify({wraps:ws.length,think:!!document.querySelector('[class*=thinking-box-root]')});})()`,
+};
+
 // 注册表（通义待实测后补）
-export const ADAPTERS = { kimi, deepseek };
-export const ADAPTER_LIST = [kimi, deepseek];
+export const ADAPTERS = { kimi, deepseek, doubao };
+export const ADAPTER_LIST = [kimi, deepseek, doubao];
