@@ -3,6 +3,16 @@ const path = require("path");
 
 const isDev = !app.isPackaged;
 
+// 单实例锁：避免多开导致多个进程争抢同一分区数据库(IndexedDB LOCK)，造成网页卡住/白屏
+if (!app.requestSingleInstanceLock()) {
+  app.quit();
+} else {
+  app.on("second-instance", () => {
+    const w = BrowserWindow.getAllWindows()[0];
+    if (w) { if (w.isMinimized()) w.restore(); w.focus(); }
+  });
+}
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1320,
