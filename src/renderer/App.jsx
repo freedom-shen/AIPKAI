@@ -9,12 +9,16 @@ const UA =
 
 const PHASE_LABEL = { setup: "准备中", running: "辩论进行中", done: "辩论已结束", paused: "已暂停" };
 
+// 上次使用的回合数 / 对战双方模型（下次打开默认沿用）
+const PREFS = (() => { try { return JSON.parse(localStorage.getItem("debate-prefs") || "{}"); } catch { return {}; } })();
+const validId = (id, fb) => (ADAPTERS[id] ? id : fb);
+
 export default function App() {
   const [tab, setTab] = useState("chat"); // chat | pro | con
   const [topic, setTopic] = useState("");
-  const [rounds, setRounds] = useState(5);
-  const [proId, setProId] = useState("kimi");
-  const [conId, setConId] = useState("kimi");
+  const [rounds, setRounds] = useState(Math.min(10, Math.max(3, PREFS.rounds || 5)));
+  const [proId, setProId] = useState(validId(PREFS.proId, "kimi"));
+  const [conId, setConId] = useState(validId(PREFS.conId, "kimi"));
   const [phase, setPhase] = useState("setup");
   const [login, setLogin] = useState({ pro: "chk", con: "chk" }); // chk | ok | no
   const [record, setRecord] = useState([]);
@@ -73,6 +77,8 @@ export default function App() {
   }, [proId, conId, shared]);
 
   useEffect(() => { try { localStorage.setItem("debate-history", JSON.stringify(history)); } catch {} }, [history]);
+  // 记住上次的回合数与对战双方模型
+  useEffect(() => { try { localStorage.setItem("debate-prefs", JSON.stringify({ rounds, proId, conId })); } catch {} }, [rounds, proId, conId]);
 
   const ready = login.pro === "ok" && login.con === "ok" && topic.trim().length > 0;
   const models = { pro: { label: proA.label, badge: proA.badge }, con: { label: conA.label, badge: conA.badge } };
