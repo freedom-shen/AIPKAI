@@ -24,6 +24,7 @@ export default function App() {
     try { return JSON.parse(localStorage.getItem("debate-history") || "[]"); } catch { return []; }
   });
   const [viewingId, setViewingId] = useState(null);
+  const [currentId, setCurrentId] = useState(null); // 当前这场（进行中/刚结束）的历史 id
 
   const [runRounds, setRunRounds] = useState(5); // 本场累计目标回合（含续辩）
   const proRef = useRef(null);
@@ -81,13 +82,19 @@ export default function App() {
     const segRounds = resume ? 3 : rounds;
     const total = resume ? runRounds + 3 : rounds;
     setRunRounds(total);
-    setErrorMsg(""); setPartial(null); setViewingId(null);
+    setErrorMsg(""); setPartial(null);
     setPhase("running"); setTab("chat");
     if (!resume) { setRecord([]); curIdRef.current = String(Date.now()); }
     const ctrl = new AbortController();
     abortRef.current = ctrl;
     const startedTopic = topic, startedModels = models, id = curIdRef.current;
+    setCurrentId(id);
+    setViewingId(id); // 选中当前这场：进行中的辩论始终在历史列表里、可点回
     const turns = resume ? [...record] : [];
+    // 新开时立刻把这场写进历史列表（标记进行中），随回合实时更新
+    if (!resume) {
+      setHistory((h) => [{ id, topic: startedTopic, rounds: total, models: startedModels, record: [], ts: Date.now(), live: true }, ...h.filter((e) => e.id !== id)].slice(0, 50));
+    }
     const pro = makeParticipant(proRef.current, proA);
     const con = makeParticipant(conRef.current, conA);
     await runDebate(
@@ -101,12 +108,13 @@ export default function App() {
           turns.push({ round, stance, text });
           setRecord((r) => [...r, { round, stance, text }]);
           setPartial(null);
+          // 实时更新历史列表里这场的内容
+          setHistory((h) => h.map((e) => (e.id === id ? { ...e, rounds: total, record: turns.slice() } : e)));
         },
         onComplete: () => {
           console.log("[debate] complete");
           setPhase("done"); setPartial(null);
-          const entry = { id, topic: startedTopic, rounds: total, models: startedModels, record: turns.slice(), ts: Date.now() };
-          setHistory((h) => [entry, ...h.filter((e) => e.id !== id)].slice(0, 50));
+          setHistory((h) => h.map((e) => (e.id === id ? { ...e, rounds: total, record: turns.slice(), live: false } : e)));
         },
         onAbnormal: (e) => { console.log("[debate] abnormal", e.reason); setErrorMsg("检测到异常（" + e.reason + "），辩论已暂停，请重新登录或重试。"); setPhase("paused"); setPartial(null); },
         onError: (e) => { console.log("[debate] error", e.message); setErrorMsg("出错：" + e.message); setPhase("paused"); setPartial(null); },
@@ -131,7 +139,7 @@ export default function App() {
   function newDebate() {
     if (phase === "running") return;
     abortRef.current?.abort();
-    setRecord([]); setPartial(null); setErrorMsg(""); setViewingId(null); setPhase("setup"); setTab("chat");
+    setRecord([]); setPartial(null); setErrorMsg(""); setViewingId(null); setCurrentId(null); setPhase("setup"); setTab("chat");
   }
 
   function exportRecord(rec, mdls, topicStr) {
@@ -152,6 +160,8 @@ export default function App() {
   }
 
   const viewingItem = viewingId ? history.find((h) => h.id === viewingId) : null;
+  // 选中的是"当前这场"(进行中/刚结束) → 显示实时视图；选中旧的 → 只读快照
+  const isViewingCurrent = !!currentId && viewingId === currentId;
 
   return (
     <div className="app">
@@ -178,13 +188,19 @@ export default function App() {
               {history.map((h) => (
                 <div key={h.id} className={"hist-item" + (viewingId === h.id ? " on" : "")} onClick={() => setViewingId(h.id)}>
                   <div className="ht">{h.topic || "未命名辩论"}</div>
-                  <div className="hm">{new Date(h.ts).toLocaleDateString()} · {h.rounds} 回合</div>
+                  <div className="hm">
+                    {h.id === currentId && phase === "running"
+                      ? <span className="hist-live"><span className="dot ok" />进行中 · {h.rounds} 回合</span>
+                      : <>{new Date(h.ts).toLocaleDateString()} · {h.rounds} 回合</>}
+                  </div>
                 </div>
               ))}
             </div>
           </aside>
           <div className="main-pane">
-            {viewingItem ? (
+            {isViewingCurrent ? (
+              <Debate topic={topic} rounds={runRounds} record={record} models={models} partial={partial} phase={phase} errorMsg={errorMsg} onExport={(r) => exportRecord(r, models, topic)} onStop={stop} onNew={newDebate} onContinue={continueDebate} />
+            ) : viewingItem ? (
               <Debate topic={viewingItem.topic} rounds={viewingItem.rounds} record={viewingItem.record} models={viewingItem.models || models} partial={null} phase="done" errorMsg="" onExport={(r) => exportRecord(r, viewingItem.models, viewingItem.topic)} onNew={newDebate} />
             ) : phase === "setup" ? (
               <Setup topic={topic} setTopic={setTopic} rounds={rounds} setRounds={setRounds}
