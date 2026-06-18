@@ -8,6 +8,10 @@
 
 简体中文 | [English](README_EN.md)
 
+<br />
+
+<img src="docs/assets/screenshot.png" width="860" alt="AI 辩论台界面截图" />
+
 </div>
 
 ---

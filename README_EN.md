@@ -6,6 +6,10 @@
 
 [简体中文](README.md) | English
 
+<br />
+
+<img src="docs/assets/screenshot.png" width="860" alt="AI Debate Arena screenshot" />
+
 </div>
 
 ---
